@@ -1,175 +1,105 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { TicketIcon, Clock, CheckCircle2, AlertTriangle, Users } from "lucide-react";
-import { Link } from "react-router-dom";
-import DashboardAnalytics from "@/components/dashboard/DashboardAnalytics";
-
-interface Ticket {
-  id: string;
-  title: string;
-  status: string;
-  priority: string;
-  vendor_id: string;
-  created_at: string;
-  assigned_to: string | null;
-}
-
-interface Vendor {
-  id: string;
-  name: string;
-}
+import { Button } from "@/components/ui/button";
+import { Ticket, Building2, Users, CheckCircle, AlertTriangle, Clock } from "lucide-react";
 
 const AdminDashboard = () => {
-  const [tickets, setTickets] = useState<Ticket[]>([]);
-  const [vendors, setVendors] = useState<Vendor[]>([]);
+  const [stats, setStats] = useState({ totalTickets: 0, openTickets: 0, pendingVendors: 0, pendingUsers: 0, activeVendors: 0 });
+  const [recentTickets, setRecentTickets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [priorityFilter, setPriorityFilter] = useState<string>("all");
-  const [vendorFilter, setVendorFilter] = useState<string>("all");
-  const [search, setSearch] = useState("");
-
-  const fetchData = async () => {
-    const [ticketsRes, vendorsRes] = await Promise.all([
-      supabase.from("tickets").select("*").order("created_at", { ascending: false }),
-      supabase.from("vendors").select("*").order("name"),
-    ]);
-    if (ticketsRes.data) setTickets(ticketsRes.data as Ticket[]);
-    if (vendorsRes.data) setVendors(vendorsRes.data as Vendor[]);
-    setLoading(false);
-  };
 
   useEffect(() => {
+    const fetchData = async () => {
+      const [ticketsRes, vendorsRes, profilesRes] = await Promise.all([
+        supabase.from("tickets").select("*").order("created_at", { ascending: false }).limit(10),
+        supabase.from("vendors").select("id, status"),
+        supabase.from("profiles").select("status"),
+      ]);
+      const tickets = ticketsRes.data || [];
+      const vendors = (vendorsRes.data || []) as any[];
+      const profiles = (profilesRes.data || []) as any[];
+      setStats({
+        totalTickets: tickets.length,
+        openTickets: tickets.filter((t: any) => t.status === "open" || t.status === "in_progress").length,
+        pendingVendors: vendors.filter(v => v.status === "pending").length,
+        pendingUsers: profiles.filter(p => p.status === "pending").length,
+        activeVendors: vendors.filter(v => v.status === "active").length,
+      });
+      setRecentTickets(tickets.slice(0, 5));
+      setLoading(false);
+    };
     fetchData();
-
-    const channel = supabase
-      .channel('admin-tickets-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets' }, () => {
-        fetchData();
-      })
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
   }, []);
 
-  const vendorMap = Object.fromEntries(vendors.map((v) => [v.id, v.name]));
-
-  const filtered = tickets.filter((t) => {
-    if (statusFilter !== "all" && t.status !== statusFilter) return false;
-    if (priorityFilter !== "all" && t.priority !== priorityFilter) return false;
-    if (vendorFilter !== "all" && t.vendor_id !== vendorFilter) return false;
-    if (search && !t.title.toLowerCase().includes(search.toLowerCase())) return false;
-    return true;
-  });
-
-  const stats = {
-    total: tickets.length,
-    open: tickets.filter((t) => t.status === "open").length,
-    inProgress: tickets.filter((t) => t.status === "in_progress").length,
-    resolved: tickets.filter((t) => t.status === "resolved" || t.status === "closed").length,
-  };
+  if (loading) return <div className="flex justify-center py-20"><div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" /></div>;
 
   return (
-    <div className="animate-fade-in space-y-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-        <div className="flex items-center gap-2">
-          <Users className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm text-muted-foreground">{vendors.length} vendors</span>
+    <div className="space-y-6">
+      <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+
+      {(stats.pendingVendors > 0 || stats.pendingUsers > 0) && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 flex items-center gap-3">
+          <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0" />
+          <p className="text-sm font-medium text-amber-800 flex-1">
+            {stats.pendingVendors > 0 && `${stats.pendingVendors} vendor(s) `}
+            {stats.pendingVendors > 0 && stats.pendingUsers > 0 && "and "}
+            {stats.pendingUsers > 0 && `${stats.pendingUsers} user(s) `}
+            awaiting approval
+          </p>
+          <Link to="/admin/approvals"><Button size="sm" variant="outline" className="border-amber-300 text-amber-800 hover:bg-amber-100">Review</Button></Link>
         </div>
-      </div>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard icon={<TicketIcon className="h-5 w-5 text-primary" />} label="Total" value={stats.total} />
-        <StatCard icon={<Clock className="h-5 w-5 text-accent" />} label="Open" value={stats.open} />
-        <StatCard icon={<AlertTriangle className="h-5 w-5 text-warning" />} label="In Progress" value={stats.inProgress} />
-        <StatCard icon={<CheckCircle2 className="h-5 w-5 text-success" />} label="Resolved" value={stats.resolved} />
+        <Card><CardContent className="flex items-center gap-4 p-5">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10"><Ticket className="h-5 w-5 text-primary" /></div>
+          <div><p className="text-2xl font-bold">{stats.totalTickets}</p><p className="text-xs text-muted-foreground">Total Tickets</p></div>
+        </CardContent></Card>
+        <Card><CardContent className="flex items-center gap-4 p-5">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50"><Clock className="h-5 w-5 text-blue-600" /></div>
+          <div><p className="text-2xl font-bold">{stats.openTickets}</p><p className="text-xs text-muted-foreground">Open / In Progress</p></div>
+        </CardContent></Card>
+        <Card><CardContent className="flex items-center gap-4 p-5">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50"><Building2 className="h-5 w-5 text-emerald-600" /></div>
+          <div><p className="text-2xl font-bold">{stats.activeVendors}</p><p className="text-xs text-muted-foreground">Active Vendors</p></div>
+        </CardContent></Card>
+        <Card><CardContent className="flex items-center gap-4 p-5">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-50"><CheckCircle className="h-5 w-5 text-amber-600" /></div>
+          <div><p className="text-2xl font-bold">{stats.pendingVendors + stats.pendingUsers}</p><p className="text-xs text-muted-foreground">Pending Approvals</p></div>
+        </CardContent></Card>
       </div>
 
-      {/* Analytics Charts */}
-      <DashboardAnalytics tickets={tickets} />
-
-      {/* Filters */}
       <Card>
-        <CardContent className="flex flex-wrap gap-3 p-4">
-          <Input placeholder="Search tickets…" value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-xs" />
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[140px]"><SelectValue placeholder="Status" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="open">Open</SelectItem>
-              <SelectItem value="in_progress">In Progress</SelectItem>
-              <SelectItem value="resolved">Resolved</SelectItem>
-              <SelectItem value="closed">Closed</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-            <SelectTrigger className="w-[140px]"><SelectValue placeholder="Priority" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Priority</SelectItem>
-              <SelectItem value="low">Low</SelectItem>
-              <SelectItem value="medium">Medium</SelectItem>
-              <SelectItem value="high">High</SelectItem>
-              <SelectItem value="urgent">Urgent</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={vendorFilter} onValueChange={setVendorFilter}>
-            <SelectTrigger className="w-[160px]"><SelectValue placeholder="Vendor" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Vendors</SelectItem>
-              {vendors.map((v) => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}
-            </SelectContent>
-          </Select>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="text-base">Recent Tickets</CardTitle>
+          <Link to="/admin/tickets"><Button variant="outline" size="sm">View All</Button></Link>
+        </CardHeader>
+        <CardContent>
+          {recentTickets.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-8">No tickets yet.</p>
+          ) : (
+            <div className="space-y-2">
+              {recentTickets.map((t: any) => (
+                <Link key={t.id} to={`/tickets/${t.id}`} className="flex items-center justify-between rounded-lg border p-3 hover:bg-muted/50 transition-colors">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium truncate">{t.title}</p>
+                    <p className="text-xs text-muted-foreground">{t.issue_type || "general"} · {new Date(t.created_at).toLocaleDateString()}</p>
+                  </div>
+                  <div className="flex gap-2 ml-4">
+                    <Badge variant="outline" className={`status-badge-${t.status} text-xs`}>{t.status.replace("_", " ")}</Badge>
+                    <Badge variant="outline" className={`priority-badge-${t.priority} text-xs`}>{t.priority}</Badge>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
-
-      {/* Ticket list */}
-      {loading ? (
-        <div className="flex justify-center py-12"><div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" /></div>
-      ) : (
-        <Card>
-          <CardHeader><CardTitle className="text-lg">All Tickets ({filtered.length})</CardTitle></CardHeader>
-          <CardContent>
-            {filtered.length === 0 ? (
-              <p className="py-4 text-center text-muted-foreground">No tickets found.</p>
-            ) : (
-              <div className="space-y-2">
-                {filtered.map((ticket) => (
-                  <Link key={ticket.id} to={`/tickets/${ticket.id}`} className="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-muted/50">
-                    <div className="min-w-0 flex-1">
-                      <p className="font-medium truncate">{ticket.title}</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {vendorMap[ticket.vendor_id] || "Unknown"} · {new Date(ticket.created_at).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2 ml-4">
-                      <Badge variant="outline" className={`ticket-status-${ticket.status}`}>{ticket.status.replace("_", " ")}</Badge>
-                      <Badge variant="outline" className={`priority-${ticket.priority}`}>{ticket.priority}</Badge>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 };
-
-const StatCard = ({ icon, label, value }: { icon: React.ReactNode; label: string; value: number }) => (
-  <Card>
-    <CardContent className="flex items-center gap-4 p-5">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">{icon}</div>
-      <div>
-        <p className="text-2xl font-bold">{value}</p>
-        <p className="text-sm text-muted-foreground">{label}</p>
-      </div>
-    </CardContent>
-  </Card>
-);
 
 export default AdminDashboard;
