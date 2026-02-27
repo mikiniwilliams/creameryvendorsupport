@@ -40,15 +40,26 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
             </Button>
           </Link>
           {role === "admin" && (
-            <Link to="/vendors">
-              <Button
-                variant="ghost"
-                className={`w-full justify-start gap-3 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground ${isActive("/vendors") ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""}`}
-              >
-                <Building2 className="h-4 w-4" />
-                Vendors
-              </Button>
-            </Link>
+            <>
+              <Link to="/vendors">
+                <Button
+                  variant="ghost"
+                  className={`w-full justify-start gap-3 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground ${isActive("/vendors") ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""}`}
+                >
+                  <Building2 className="h-4 w-4" />
+                  Vendors
+                </Button>
+              </Link>
+              <Link to="/users">
+                <Button
+                  variant="ghost"
+                  className={`w-full justify-start gap-3 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground ${isActive("/users") ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""}`}
+                >
+                  <Users className="h-4 w-4" />
+                  Users
+                </Button>
+              </Link>
+            </>
           )}
         </nav>
 
