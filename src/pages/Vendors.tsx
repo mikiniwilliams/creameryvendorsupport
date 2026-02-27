@@ -22,8 +22,6 @@ const Vendors = () => {
   const [newName, setNewName] = useState("");
   const [loading, setLoading] = useState(true);
 
-  if (role !== "admin") return <Navigate to="/" replace />;
-
   const fetchVendors = async () => {
     const { data } = await supabase.from("vendors").select("*").order("name");
     if (data) setVendors(data as Vendor[]);
@@ -43,6 +41,8 @@ const Vendors = () => {
       toast({ title: "Vendor added" });
     }
   };
+
+  if (role !== "admin") return <Navigate to="/" replace />;
 
   return (
     <AppLayout>
