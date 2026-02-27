@@ -88,6 +88,7 @@ const TicketDetail = () => {
 
     return () => { supabase.removeChannel(channel); };
   }, [id]);
+  useEffect(() => { if (role === "admin") fetchAdminUsers(); }, [role]);
 
   const updateTicket = async (field: string, value: string | null) => {
     if (!id) return;
