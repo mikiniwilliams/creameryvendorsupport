@@ -183,6 +183,33 @@ const TicketDetail = () => {
                     </SelectContent>
                   </Select>
                 </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                    <UserCheck className="h-3 w-3" /> Assign To
+                  </label>
+                  <Select
+                    value={ticket.assigned_to || "unassigned"}
+                    onValueChange={(v) => updateTicket("assigned_to", v === "unassigned" ? null : v)}
+                  >
+                    <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="unassigned">Unassigned</SelectItem>
+                      {adminUsers.map((a) => (
+                        <SelectItem key={a.user_id} value={a.user_id}>
+                          {a.full_name || a.email || "Admin"}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
+
+            {/* Show assignee for non-admins */}
+            {role !== "admin" && ticket.assigned_to && (
+              <div className="border-t pt-4">
+                <p className="text-xs font-medium text-muted-foreground">Assigned to</p>
+                <p className="text-sm mt-1">{getAssigneeName(ticket.assigned_to)}</p>
               </div>
             )}
           </CardContent>
