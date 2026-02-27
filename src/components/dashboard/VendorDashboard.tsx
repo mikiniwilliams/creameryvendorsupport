@@ -20,18 +20,30 @@ const VendorDashboard = () => {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const fetchTickets = async () => {
+    if (!profile?.vendor_id) { setLoading(false); return; }
+    const { data } = await supabase
+      .from("tickets")
+      .select("*")
+      .eq("vendor_id", profile.vendor_id)
+      .order("created_at", { ascending: false });
+    if (data) setTickets(data as Ticket[]);
+    setLoading(false);
+  };
+
   useEffect(() => {
-    const fetchTickets = async () => {
-      if (!profile?.vendor_id) { setLoading(false); return; }
-      const { data } = await supabase
-        .from("tickets")
-        .select("*")
-        .eq("vendor_id", profile.vendor_id)
-        .order("created_at", { ascending: false });
-      if (data) setTickets(data as Ticket[]);
-      setLoading(false);
-    };
     fetchTickets();
+
+    if (!profile?.vendor_id) return;
+
+    const channel = supabase
+      .channel('vendor-tickets-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets', filter: `vendor_id=eq.${profile.vendor_id}` }, () => {
+        fetchTickets();
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, [profile]);
 
   const stats = {
