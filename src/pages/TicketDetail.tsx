@@ -31,6 +31,12 @@ interface Comment {
   created_at: string;
 }
 
+interface AdminUser {
+  user_id: string;
+  full_name: string | null;
+  email: string | null;
+}
+
 const TicketDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { user, role } = useAuth();
@@ -38,6 +44,7 @@ const TicketDetail = () => {
   const { toast } = useToast();
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
+  const [adminUsers, setAdminUsers] = useState<AdminUser[]>([]);
   const [newComment, setNewComment] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
