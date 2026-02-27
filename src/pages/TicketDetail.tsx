@@ -216,6 +216,19 @@ const TicketDetail = () => {
           </CardContent>
         </Card>
 
+        {/* Activity Timeline */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <History className="h-4 w-4" />
+              Activity
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ActivityTimeline ticketId={ticket.id} key={comments.length} />
+          </CardContent>
+        </Card>
+
         {/* Comments */}
         <Card>
           <CardHeader><CardTitle className="text-lg">Comments ({comments.length})</CardTitle></CardHeader>
