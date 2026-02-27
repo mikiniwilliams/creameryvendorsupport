@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import AppLayout from "@/components/AppLayout";
+import ConfirmDialog from "@/components/ConfirmDialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -198,9 +199,17 @@ const KnowledgeBase = () => {
                               <Button size="sm" variant="outline" onClick={() => openEdit(article)} className="gap-1">
                                 <Pencil className="h-3 w-3" /> Edit
                               </Button>
-                              <Button size="sm" variant="destructive" onClick={() => handleDelete(article.id)} className="gap-1">
-                                <Trash2 className="h-3 w-3" /> Delete
-                              </Button>
+                              <ConfirmDialog
+                                trigger={
+                                  <Button size="sm" variant="destructive" className="gap-1">
+                                    <Trash2 className="h-3 w-3" /> Delete
+                                  </Button>
+                                }
+                                title="Delete article?"
+                                description="This knowledge base article will be permanently removed."
+                                confirmLabel="Delete"
+                                onConfirm={() => handleDelete(article.id)}
+                              />
                             </div>
                           )}
                         </AccordionContent>

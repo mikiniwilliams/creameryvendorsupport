@@ -1,16 +1,18 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Plus, Ticket, Clock, CheckCircle } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Plus, Ticket, Clock, CheckCircle, Search } from "lucide-react";
 
 const VendorDashboard = () => {
   const { user } = useAuth();
   const [tickets, setTickets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     const fetchTickets = async () => {
@@ -21,12 +23,17 @@ const VendorDashboard = () => {
     fetchTickets();
   }, []);
 
+
   const openCount = tickets.filter(t => t.status === "open" || t.status === "in_progress").length;
   const resolvedCount = tickets.filter(t => t.status === "resolved" || t.status === "closed").length;
+  const filtered = tickets.filter(t =>
+    t.title.toLowerCase().includes(search.toLowerCase()) ||
+    (t.issue_type || "").toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="animate-fade-in space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <h1 className="text-2xl font-bold">My Tickets</h1>
         <Link to="/tickets/new"><Button className="gap-2"><Plus className="h-4 w-4" /> New Ticket</Button></Link>
       </div>
@@ -47,19 +54,25 @@ const VendorDashboard = () => {
       </div>
 
       <Card>
-        <CardHeader><CardTitle className="text-base">All Tickets</CardTitle></CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="text-base">All Tickets</CardTitle>
+          <div className="relative w-48">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input placeholder="Search…" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-8 text-xs" />
+          </div>
+        </CardHeader>
         <CardContent>
           {loading ? (
             <div className="flex justify-center py-8"><div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" /></div>
-          ) : tickets.length === 0 ? (
+          ) : filtered.length === 0 ? (
             <div className="text-center py-12">
               <Ticket className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
-              <p className="text-muted-foreground mb-3">No tickets yet</p>
-              <Link to="/tickets/new"><Button size="sm" className="gap-2"><Plus className="h-3.5 w-3.5" /> Create Your First Ticket</Button></Link>
+              <p className="text-muted-foreground mb-3">{search ? "No tickets match your search" : "No tickets yet"}</p>
+              {!search && <Link to="/tickets/new"><Button size="sm" className="gap-2"><Plus className="h-3.5 w-3.5" /> Create Your First Ticket</Button></Link>}
             </div>
           ) : (
             <div className="space-y-2">
-              {tickets.map((t: any) => (
+              {filtered.map((t: any) => (
                 <Link key={t.id} to={`/tickets/${t.id}`} className="flex items-center justify-between rounded-lg border p-3 hover:bg-muted/50 transition-colors">
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium truncate">{t.title}</p>
