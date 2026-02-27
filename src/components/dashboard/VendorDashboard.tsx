@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Ticket, Clock, CheckCircle, Search } from "lucide-react";
+import DashboardAnalytics from "./DashboardAnalytics";
 
 const VendorDashboard = () => {
   const { user } = useAuth();
@@ -88,6 +89,8 @@ const VendorDashboard = () => {
           )}
         </CardContent>
       </Card>
+
+      <DashboardAnalytics tickets={tickets} />
     </div>
   );
 };

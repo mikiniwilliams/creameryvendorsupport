@@ -5,22 +5,25 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Ticket, Building2, Users, CheckCircle, AlertTriangle, Clock } from "lucide-react";
+import DashboardAnalytics from "./DashboardAnalytics";
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState({ totalTickets: 0, openTickets: 0, pendingVendors: 0, pendingUsers: 0, activeVendors: 0 });
+  const [allTickets, setAllTickets] = useState<any[]>([]);
   const [recentTickets, setRecentTickets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       const [ticketsRes, vendorsRes, profilesRes] = await Promise.all([
-        supabase.from("tickets").select("*").order("created_at", { ascending: false }).limit(10),
+        supabase.from("tickets").select("*").order("created_at", { ascending: false }),
         supabase.from("vendors").select("id, status"),
         supabase.from("profiles").select("status"),
       ]);
       const tickets = ticketsRes.data || [];
       const vendors = (vendorsRes.data || []) as any[];
       const profiles = (profilesRes.data || []) as any[];
+      setAllTickets(tickets);
       setStats({
         totalTickets: tickets.length,
         openTickets: tickets.filter((t: any) => t.status === "open" || t.status === "in_progress").length,
@@ -98,6 +101,8 @@ const AdminDashboard = () => {
           )}
         </CardContent>
       </Card>
+
+      <DashboardAnalytics tickets={allTickets} />
     </div>
   );
 };
