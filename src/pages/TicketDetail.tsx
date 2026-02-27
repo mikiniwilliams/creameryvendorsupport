@@ -130,7 +130,31 @@ const TicketDetail = () => {
     setSubmitting(false);
   };
 
-  if (loading) {
+  const updateComment = async (commentId: string) => {
+    if (!editContent.trim()) return;
+    if (editContent.trim().length > 5000) {
+      toast({ title: "Error", description: "Comment must be 5000 characters or less.", variant: "destructive" });
+      return;
+    }
+    const { error } = await supabase.from("comments").update({ content: editContent.trim() }).eq("id", commentId);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      setEditingId(null);
+      setEditContent("");
+      fetchData();
+    }
+  };
+
+  const deleteComment = async (commentId: string) => {
+    const { error } = await supabase.from("comments").delete().eq("id", commentId);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      fetchData();
+    }
+  };
+
     return (
       <AppLayout>
         <div className="flex justify-center py-20"><div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" /></div>
