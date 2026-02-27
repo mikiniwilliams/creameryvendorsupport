@@ -222,6 +222,7 @@ const SupportChatbot = () => {
                   ) : (
                     msg.content
                   )}
+                </div>
                 {msg.role === "user" && (
                   <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
                     <User className="h-4 w-4" />
