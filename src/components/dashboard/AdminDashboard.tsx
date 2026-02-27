@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Ticket, Building2, Users, CheckCircle, AlertTriangle, Clock } from "lucide-react";
+import DashboardAnalytics from "./DashboardAnalytics";
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState({ totalTickets: 0, openTickets: 0, pendingVendors: 0, pendingUsers: 0, activeVendors: 0 });
