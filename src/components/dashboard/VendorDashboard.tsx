@@ -12,6 +12,7 @@ const VendorDashboard = () => {
   const { user } = useAuth();
   const [tickets, setTickets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     const fetchTickets = async () => {
@@ -22,7 +23,6 @@ const VendorDashboard = () => {
     fetchTickets();
   }, []);
 
-  const [search, setSearch] = useState("");
 
   const openCount = tickets.filter(t => t.status === "open" || t.status === "in_progress").length;
   const resolvedCount = tickets.filter(t => t.status === "resolved" || t.status === "closed").length;
