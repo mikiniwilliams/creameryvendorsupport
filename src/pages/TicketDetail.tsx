@@ -281,12 +281,67 @@ const TicketDetail = () => {
           <CardHeader><CardTitle className="text-lg">Comments ({comments.length})</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             {comments.length === 0 && <p className="text-sm text-muted-foreground">No comments yet.</p>}
-            {comments.map((c) => (
-              <div key={c.id} className="rounded-lg border p-4">
-                <p className="text-sm whitespace-pre-wrap">{c.content}</p>
-                <p className="text-xs text-muted-foreground mt-2">{new Date(c.created_at).toLocaleString()}</p>
-              </div>
-            ))}
+            {comments.map((c) => {
+              const isOwn = c.user_id === user?.id;
+              const canEdit = isOwn;
+              const canDelete = isOwn || role === "admin";
+
+              return (
+                <div key={c.id} className="rounded-lg border p-4 group">
+                  {editingId === c.id ? (
+                    <div className="space-y-2">
+                      <Textarea
+                        value={editContent}
+                        onChange={(e) => setEditContent(e.target.value)}
+                        rows={2}
+                        className="text-sm"
+                      />
+                      <div className="flex gap-2">
+                        <Button size="sm" onClick={() => updateComment(c.id)} disabled={!editContent.trim()} className="gap-1">
+                          <Check className="h-3 w-3" /> Save
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => { setEditingId(null); setEditContent(""); }} className="gap-1">
+                          <X className="h-3 w-3" /> Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="text-sm whitespace-pre-wrap flex-1">{c.content}</p>
+                        {(canEdit || canDelete) && (
+                          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                            {canEdit && (
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-7 w-7"
+                                onClick={() => { setEditingId(c.id); setEditContent(c.content); }}
+                                title="Edit comment"
+                              >
+                                <Pencil className="h-3 w-3" />
+                              </Button>
+                            )}
+                            {canDelete && (
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-7 w-7 text-destructive hover:text-destructive"
+                                onClick={() => deleteComment(c.id)}
+                                title="Delete comment"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-2">{new Date(c.created_at).toLocaleString()}</p>
+                    </>
+                  )}
+                </div>
+              );
+            })}
 
             <div className="flex gap-2 pt-2">
               <Textarea
