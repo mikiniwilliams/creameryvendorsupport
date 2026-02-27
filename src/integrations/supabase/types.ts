@@ -84,6 +84,7 @@ export type Database = {
           message: string
           ticket_id: string | null
           title: string
+          type: string | null
           user_id: string
         }
         Insert: {
@@ -93,6 +94,7 @@ export type Database = {
           message: string
           ticket_id?: string | null
           title: string
+          type?: string | null
           user_id: string
         }
         Update: {
@@ -102,6 +104,7 @@ export type Database = {
           message?: string
           ticket_id?: string | null
           title?: string
+          type?: string | null
           user_id?: string
         }
         Relationships: [
@@ -120,6 +123,7 @@ export type Database = {
           email: string | null
           full_name: string | null
           id: string
+          status: string
           user_id: string
           vendor_id: string | null
         }
@@ -128,6 +132,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          status?: string
           user_id: string
           vendor_id?: string | null
         }
@@ -136,6 +141,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          status?: string
           user_id?: string
           vendor_id?: string | null
         }
@@ -194,6 +200,7 @@ export type Database = {
           created_by: string
           description: string | null
           id: string
+          issue_type: string
           priority: string
           status: string
           title: string
@@ -206,6 +213,7 @@ export type Database = {
           created_by: string
           description?: string | null
           id?: string
+          issue_type?: string
           priority?: string
           status?: string
           title: string
@@ -218,6 +226,7 @@ export type Database = {
           created_by?: string
           description?: string | null
           id?: string
+          issue_type?: string
           priority?: string
           status?: string
           title?: string
@@ -255,18 +264,27 @@ export type Database = {
       vendors: {
         Row: {
           created_at: string
+          created_by_user_id: string | null
           id: string
           name: string
+          status: string
+          vendor_website: string | null
         }
         Insert: {
           created_at?: string
+          created_by_user_id?: string | null
           id?: string
           name: string
+          status?: string
+          vendor_website?: string | null
         }
         Update: {
           created_at?: string
+          created_by_user_id?: string | null
           id?: string
           name?: string
+          status?: string
+          vendor_website?: string | null
         }
         Relationships: []
       }
@@ -275,6 +293,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      approve_user: { Args: { _user_id: string }; Returns: undefined }
+      approve_vendor: { Args: { _vendor_id: string }; Returns: undefined }
+      create_vendor_request: {
+        Args: { _vendor_name: string; _vendor_website?: string }
+        Returns: string
+      }
+      disable_user: { Args: { _user_id: string }; Returns: undefined }
+      disable_vendor: { Args: { _vendor_id: string }; Returns: undefined }
       get_user_vendor_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
@@ -283,6 +309,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_active_user: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "vendor"
