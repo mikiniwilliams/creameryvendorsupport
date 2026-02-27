@@ -9,6 +9,7 @@ import DashboardAnalytics from "./DashboardAnalytics";
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState({ totalTickets: 0, openTickets: 0, pendingVendors: 0, pendingUsers: 0, activeVendors: 0 });
+  const [allTickets, setAllTickets] = useState<any[]>([]);
   const [recentTickets, setRecentTickets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
