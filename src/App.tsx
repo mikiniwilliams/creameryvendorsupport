@@ -11,6 +11,7 @@ import NewTicket from "./pages/NewTicket";
 import TicketDetail from "./pages/TicketDetail";
 import Vendors from "./pages/Vendors";
 import UserManagement from "./pages/UserManagement";
+import KnowledgeBase from "./pages/KnowledgeBase";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
