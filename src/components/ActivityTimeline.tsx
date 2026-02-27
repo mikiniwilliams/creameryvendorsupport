@@ -16,7 +16,7 @@ interface Activity {
 }
 
 interface ProfileMap {
-  [userId: string]: { full_name: string | null; email: string | null };
+  [userId: string]: { full_name: string | null };
 }
 
 const activityConfig: Record<string, { icon: React.ReactNode; label: string; color: string }> = {
