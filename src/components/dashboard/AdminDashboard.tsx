@@ -16,7 +16,7 @@ const AdminDashboard = () => {
   useEffect(() => {
     const fetchData = async () => {
       const [ticketsRes, vendorsRes, profilesRes] = await Promise.all([
-        supabase.from("tickets").select("*").order("created_at", { ascending: false }).limit(10),
+        supabase.from("tickets").select("*").order("created_at", { ascending: false }),
         supabase.from("vendors").select("id, status"),
         supabase.from("profiles").select("status"),
       ]);
