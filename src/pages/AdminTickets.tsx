@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Ticket, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Ticket, Search, Download } from "lucide-react";
 
 interface TicketRow {
   id: string;
@@ -68,11 +69,36 @@ const AdminTickets = () => {
     return true;
   });
 
+  const exportCsv = () => {
+    const headers = ["Title", "Vendor", "Type", "Status", "Priority", "Assigned To", "Created"];
+    const escape = (v: string) => `"${v.replace(/"/g, '""')}"`;
+    const rows = filtered.map(t => [
+      escape(t.title),
+      escape(getVendorName(t.vendor_id)),
+      escape(t.issue_type),
+      escape(t.status),
+      escape(t.priority),
+      escape(getAdminName(t.assigned_to)),
+      escape(new Date(t.created_at).toLocaleDateString()),
+    ].join(","));
+    const csv = [headers.join(","), ...rows].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `tickets-export-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <AppLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold flex items-center gap-2"><Ticket className="h-6 w-6" /> Ticket Command Center</h1>
+          <Button variant="outline" size="sm" onClick={exportCsv} disabled={filtered.length === 0} className="gap-2">
+            <Download className="h-4 w-4" /> Export CSV
+          </Button>
         </div>
 
         <Card>
