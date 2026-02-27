@@ -202,9 +202,17 @@ const TicketDetail = () => {
                               </Button>
                             )}
                             {canDelete && (
-                              <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => deleteComment(c.id)}>
-                                <Trash2 className="h-3 w-3" />
-                              </Button>
+                              <ConfirmDialog
+                                trigger={
+                                  <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive">
+                                    <Trash2 className="h-3 w-3" />
+                                  </Button>
+                                }
+                                title="Delete comment?"
+                                description="This comment will be permanently removed."
+                                confirmLabel="Delete"
+                                onConfirm={() => deleteComment(c.id)}
+                              />
                             )}
                           </div>
                         )}

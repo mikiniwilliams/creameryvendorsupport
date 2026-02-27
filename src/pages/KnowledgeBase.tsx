@@ -199,9 +199,17 @@ const KnowledgeBase = () => {
                               <Button size="sm" variant="outline" onClick={() => openEdit(article)} className="gap-1">
                                 <Pencil className="h-3 w-3" /> Edit
                               </Button>
-                              <Button size="sm" variant="destructive" onClick={() => handleDelete(article.id)} className="gap-1">
-                                <Trash2 className="h-3 w-3" /> Delete
-                              </Button>
+                              <ConfirmDialog
+                                trigger={
+                                  <Button size="sm" variant="destructive" className="gap-1">
+                                    <Trash2 className="h-3 w-3" /> Delete
+                                  </Button>
+                                }
+                                title="Delete article?"
+                                description="This knowledge base article will be permanently removed."
+                                confirmLabel="Delete"
+                                onConfirm={() => handleDelete(article.id)}
+                              />
                             </div>
                           )}
                         </AccordionContent>
