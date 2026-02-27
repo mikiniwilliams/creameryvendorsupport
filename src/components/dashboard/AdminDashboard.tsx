@@ -101,6 +101,8 @@ const AdminDashboard = () => {
           )}
         </CardContent>
       </Card>
+
+      <DashboardAnalytics tickets={allTickets} />
     </div>
   );
 };
