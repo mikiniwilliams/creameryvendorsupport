@@ -90,7 +90,7 @@ const ActivityTimeline = ({ ticketId }: { ticketId: string }) => {
   const getUserName = (userId: string | null) => {
     if (!userId) return "System";
     const p = profiles[userId];
-    return p?.full_name || p?.email || "User";
+    return p?.full_name || "User";
   };
 
   if (loading) {

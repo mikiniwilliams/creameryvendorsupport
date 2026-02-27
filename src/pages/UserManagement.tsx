@@ -83,8 +83,6 @@ const UserManagement = () => {
     }
   };
 
-  if (role !== "admin") return <Navigate to="/" replace />;
-
   return (
     <AppLayout>
       <div className="mx-auto max-w-4xl animate-fade-in space-y-6">

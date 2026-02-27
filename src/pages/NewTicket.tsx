@@ -26,6 +26,14 @@ const NewTicket = () => {
       toast({ title: "Error", description: "You must be associated with a vendor.", variant: "destructive" });
       return;
     }
+    if (title.trim().length > 200) {
+      toast({ title: "Error", description: "Title must be 200 characters or less.", variant: "destructive" });
+      return;
+    }
+    if (description.length > 5000) {
+      toast({ title: "Error", description: "Description must be 5000 characters or less.", variant: "destructive" });
+      return;
+    }
     setLoading(true);
     const { error } = await supabase.from("tickets").insert({
       title,

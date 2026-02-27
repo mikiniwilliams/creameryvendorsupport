@@ -79,6 +79,14 @@ const KnowledgeBase = () => {
       toast({ title: "Error", description: "Title and content are required.", variant: "destructive" });
       return;
     }
+    if (form.title.trim().length > 200) {
+      toast({ title: "Error", description: "Title must be 200 characters or less.", variant: "destructive" });
+      return;
+    }
+    if (form.content.trim().length > 50000) {
+      toast({ title: "Error", description: "Content must be 50,000 characters or less.", variant: "destructive" });
+      return;
+    }
     setSaving(true);
     if (editingArticle) {
       const { error } = await supabase.from("kb_articles").update(form).eq("id", editingArticle.id);
