@@ -60,7 +60,18 @@ const TicketDetail = () => {
     setLoading(false);
   };
 
+  const fetchAdminUsers = async () => {
+    // Get all admin role entries, then fetch their profiles
+    const { data: adminRoles } = await supabase.from("user_roles").select("user_id").eq("role", "admin");
+    if (adminRoles && adminRoles.length > 0) {
+      const adminIds = adminRoles.map((r) => r.user_id);
+      const { data: profiles } = await supabase.from("profiles").select("user_id, full_name, email").in("user_id", adminIds);
+      if (profiles) setAdminUsers(profiles as AdminUser[]);
+    }
+  };
+
   useEffect(() => { fetchData(); }, [id]);
+  useEffect(() => { if (role === "admin") fetchAdminUsers(); }, [role]);
 
   const updateTicket = async (field: string, value: string) => {
     if (!id) return;
