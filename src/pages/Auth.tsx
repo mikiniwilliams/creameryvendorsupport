@@ -51,7 +51,7 @@ const Auth = () => {
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-primary">
             <Ticket className="h-7 w-7 text-primary-foreground" />
           </div>
-          <CardTitle className="text-2xl font-bold">DeskFlow</CardTitle>
+          <CardTitle className="text-2xl font-bold">VendorCare Connect</CardTitle>
           <CardDescription>Customer service ticketing platform</CardDescription>
         </CardHeader>
         <CardContent>
