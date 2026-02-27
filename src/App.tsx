@@ -10,6 +10,7 @@ import Auth from "./pages/Auth";
 import NewTicket from "./pages/NewTicket";
 import TicketDetail from "./pages/TicketDetail";
 import Vendors from "./pages/Vendors";
+import UserManagement from "./pages/UserManagement";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,6 +28,7 @@ const App = () => (
             <Route path="/tickets/new" element={<ProtectedRoute><NewTicket /></ProtectedRoute>} />
             <Route path="/tickets/:id" element={<ProtectedRoute><TicketDetail /></ProtectedRoute>} />
             <Route path="/vendors" element={<ProtectedRoute><Vendors /></ProtectedRoute>} />
+            <Route path="/users" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
