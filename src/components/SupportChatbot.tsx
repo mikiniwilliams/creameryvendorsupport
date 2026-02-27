@@ -179,14 +179,25 @@ const SupportChatbot = () => {
               <Bot className="h-5 w-5" />
               <span className="font-semibold text-sm">Support Assistant</span>
             </div>
-            <button
-              onClick={() => setOpen(false)}
-              className="text-primary-foreground/80 hover:text-primary-foreground"
-              aria-label="Close chat"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
+            <div className="flex items-center gap-1">
+              {messages.length > 0 && (
+                <button
+                  onClick={() => setMessages([])}
+                  className="text-primary-foreground/80 hover:text-primary-foreground p-1"
+                  aria-label="Clear chat"
+                  title="Clear chat"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              )}
+              <button
+                onClick={() => setOpen(false)}
+                className="text-primary-foreground/80 hover:text-primary-foreground p-1"
+                aria-label="Close chat"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
 
           {/* Messages */}
           <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
