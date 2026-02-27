@@ -1,7 +1,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Ticket, LayoutDashboard, Building2, LogOut, Plus, Users } from "lucide-react";
+import { Ticket, LayoutDashboard, Building2, LogOut, Plus, Users, BookOpen } from "lucide-react";
 import NotificationBell from "@/components/NotificationBell";
 
 const AppLayout = ({ children }: { children: React.ReactNode }) => {
@@ -62,6 +62,16 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
               </Link>
             </>
           )}
+
+          <Link to="/knowledge-base">
+            <Button
+              variant="ghost"
+              className={`w-full justify-start gap-3 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground ${isActive("/knowledge-base") ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""}`}
+            >
+              <BookOpen className="h-4 w-4" />
+              Knowledge Base
+            </Button>
+          </Link>
 
           <div className="pt-2">
             <NotificationBell />
