@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Send } from "lucide-react";
+import { ArrowLeft, Send, UserCheck } from "lucide-react";
 
 interface Ticket {
   id: string;
@@ -31,6 +31,12 @@ interface Comment {
   created_at: string;
 }
 
+interface AdminUser {
+  user_id: string;
+  full_name: string | null;
+  email: string | null;
+}
+
 const TicketDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { user, role } = useAuth();
@@ -38,6 +44,7 @@ const TicketDetail = () => {
   const { toast } = useToast();
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
+  const [adminUsers, setAdminUsers] = useState<AdminUser[]>([]);
   const [newComment, setNewComment] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -53,9 +60,20 @@ const TicketDetail = () => {
     setLoading(false);
   };
 
-  useEffect(() => { fetchData(); }, [id]);
+  const fetchAdminUsers = async () => {
+    // Get all admin role entries, then fetch their profiles
+    const { data: adminRoles } = await supabase.from("user_roles").select("user_id").eq("role", "admin");
+    if (adminRoles && adminRoles.length > 0) {
+      const adminIds = adminRoles.map((r) => r.user_id);
+      const { data: profiles } = await supabase.from("profiles").select("user_id, full_name, email").in("user_id", adminIds);
+      if (profiles) setAdminUsers(profiles as AdminUser[]);
+    }
+  };
 
-  const updateTicket = async (field: string, value: string) => {
+  useEffect(() => { fetchData(); }, [id]);
+  useEffect(() => { if (role === "admin") fetchAdminUsers(); }, [role]);
+
+  const updateTicket = async (field: string, value: string | null) => {
     if (!id) return;
     const { error } = await supabase.from("tickets").update({ [field]: value }).eq("id", id);
     if (error) {
@@ -64,6 +82,12 @@ const TicketDetail = () => {
       setTicket((prev) => prev ? { ...prev, [field]: value } : prev);
       toast({ title: "Ticket updated" });
     }
+  };
+
+  const getAssigneeName = (userId: string | null) => {
+    if (!userId) return null;
+    const admin = adminUsers.find((a) => a.user_id === userId);
+    return admin?.full_name || admin?.email || "Unknown";
   };
 
   const addComment = async () => {
@@ -159,6 +183,33 @@ const TicketDetail = () => {
                     </SelectContent>
                   </Select>
                 </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                    <UserCheck className="h-3 w-3" /> Assign To
+                  </label>
+                  <Select
+                    value={ticket.assigned_to || "unassigned"}
+                    onValueChange={(v) => updateTicket("assigned_to", v === "unassigned" ? null : v)}
+                  >
+                    <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="unassigned">Unassigned</SelectItem>
+                      {adminUsers.map((a) => (
+                        <SelectItem key={a.user_id} value={a.user_id}>
+                          {a.full_name || a.email || "Admin"}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
+
+            {/* Show assignee for non-admins */}
+            {role !== "admin" && ticket.assigned_to && (
+              <div className="border-t pt-4">
+                <p className="text-xs font-medium text-muted-foreground">Assigned to</p>
+                <p className="text-sm mt-1">{getAssigneeName(ticket.assigned_to)}</p>
               </div>
             )}
           </CardContent>
