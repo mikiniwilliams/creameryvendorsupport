@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Ticket, LayoutDashboard, Building2, LogOut, Plus, Users, BookOpen } from "lucide-react";
 import NotificationBell from "@/components/NotificationBell";
+import SupportChatbot from "@/components/SupportChatbot";
 
 const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const { role, profile, signOut } = useAuth();
