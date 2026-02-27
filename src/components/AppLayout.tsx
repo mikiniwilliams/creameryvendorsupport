@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Ticket, LayoutDashboard, Building2, LogOut, Plus, Users, BookOpen } from "lucide-react";
 import NotificationBell from "@/components/NotificationBell";
+import SupportChatbot from "@/components/SupportChatbot";
 
 const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const { role, profile, signOut } = useAuth();
@@ -94,6 +95,9 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
       <main className="ml-64 flex-1 p-8">
         {children}
       </main>
+
+      {/* AI Support Chatbot */}
+      <SupportChatbot />
     </div>
   );
 };
