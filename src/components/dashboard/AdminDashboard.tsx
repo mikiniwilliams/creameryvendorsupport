@@ -32,17 +32,27 @@ const AdminDashboard = () => {
   const [vendorFilter, setVendorFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
 
+  const fetchData = async () => {
+    const [ticketsRes, vendorsRes] = await Promise.all([
+      supabase.from("tickets").select("*").order("created_at", { ascending: false }),
+      supabase.from("vendors").select("*").order("name"),
+    ]);
+    if (ticketsRes.data) setTickets(ticketsRes.data as Ticket[]);
+    if (vendorsRes.data) setVendors(vendorsRes.data as Vendor[]);
+    setLoading(false);
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      const [ticketsRes, vendorsRes] = await Promise.all([
-        supabase.from("tickets").select("*").order("created_at", { ascending: false }),
-        supabase.from("vendors").select("*").order("name"),
-      ]);
-      if (ticketsRes.data) setTickets(ticketsRes.data as Ticket[]);
-      if (vendorsRes.data) setVendors(vendorsRes.data as Vendor[]);
-      setLoading(false);
-    };
     fetchData();
+
+    const channel = supabase
+      .channel('admin-tickets-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets' }, () => {
+        fetchData();
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
   const vendorMap = Object.fromEntries(vendors.map((v) => [v.id, v.name]));

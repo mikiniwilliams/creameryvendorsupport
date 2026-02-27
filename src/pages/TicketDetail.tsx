@@ -71,7 +71,23 @@ const TicketDetail = () => {
     }
   };
 
-  useEffect(() => { fetchData(); }, [id]);
+  useEffect(() => {
+    fetchData();
+
+    if (!id) return;
+
+    const channel = supabase
+      .channel(`ticket-detail-${id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets', filter: `id=eq.${id}` }, () => {
+        fetchData();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'comments', filter: `ticket_id=eq.${id}` }, () => {
+        fetchData();
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [id]);
   useEffect(() => { if (role === "admin") fetchAdminUsers(); }, [role]);
 
   const updateTicket = async (field: string, value: string | null) => {
