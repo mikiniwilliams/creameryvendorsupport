@@ -96,6 +96,9 @@ const AdminTickets = () => {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold flex items-center gap-2"><Ticket className="h-6 w-6" /> Ticket Command Center</h1>
+          <Button variant="outline" size="sm" onClick={exportCsv} disabled={filtered.length === 0} className="gap-2">
+            <Download className="h-4 w-4" /> Export CSV
+          </Button>
         </div>
 
         <Card>
