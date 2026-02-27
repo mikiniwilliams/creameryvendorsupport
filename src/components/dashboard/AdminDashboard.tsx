@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { TicketIcon, Clock, CheckCircle2, AlertTriangle, Users } from "lucide-react";
 import { Link } from "react-router-dom";
+import DashboardAnalytics from "@/components/dashboard/DashboardAnalytics";
 
 interface Ticket {
   id: string;
