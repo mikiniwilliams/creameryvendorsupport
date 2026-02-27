@@ -69,6 +69,28 @@ const AdminTickets = () => {
     return true;
   });
 
+  const exportCsv = () => {
+    const headers = ["Title", "Vendor", "Type", "Status", "Priority", "Assigned To", "Created"];
+    const escape = (v: string) => `"${v.replace(/"/g, '""')}"`;
+    const rows = filtered.map(t => [
+      escape(t.title),
+      escape(getVendorName(t.vendor_id)),
+      escape(t.issue_type),
+      escape(t.status),
+      escape(t.priority),
+      escape(getAdminName(t.assigned_to)),
+      escape(new Date(t.created_at).toLocaleDateString()),
+    ].join(","));
+    const csv = [headers.join(","), ...rows].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `tickets-export-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <AppLayout>
       <div className="space-y-6">
