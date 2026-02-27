@@ -79,6 +79,9 @@ const AdminDashboard = () => {
         <StatCard icon={<CheckCircle2 className="h-5 w-5 text-success" />} label="Resolved" value={stats.resolved} />
       </div>
 
+      {/* Analytics Charts */}
+      <DashboardAnalytics tickets={tickets} />
+
       {/* Filters */}
       <Card>
         <CardContent className="flex flex-wrap gap-3 p-4">
