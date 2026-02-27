@@ -25,9 +25,18 @@ const VendorDashboard = () => {
   const openCount = tickets.filter(t => t.status === "open" || t.status === "in_progress").length;
   const resolvedCount = tickets.filter(t => t.status === "resolved" || t.status === "closed").length;
 
+  const [search, setSearch] = useState("");
+
+  const openCount = tickets.filter(t => t.status === "open" || t.status === "in_progress").length;
+  const resolvedCount = tickets.filter(t => t.status === "resolved" || t.status === "closed").length;
+  const filtered = tickets.filter(t =>
+    t.title.toLowerCase().includes(search.toLowerCase()) ||
+    (t.issue_type || "").toLowerCase().includes(search.toLowerCase())
+  );
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="animate-fade-in space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <h1 className="text-2xl font-bold">My Tickets</h1>
         <Link to="/tickets/new"><Button className="gap-2"><Plus className="h-4 w-4" /> New Ticket</Button></Link>
       </div>
