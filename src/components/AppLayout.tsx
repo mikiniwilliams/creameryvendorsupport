@@ -63,6 +63,16 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
             </>
           )}
 
+          <Link to="/knowledge-base">
+            <Button
+              variant="ghost"
+              className={`w-full justify-start gap-3 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground ${isActive("/knowledge-base") ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""}`}
+            >
+              <BookOpen className="h-4 w-4" />
+              Knowledge Base
+            </Button>
+          </Link>
+
           <div className="pt-2">
             <NotificationBell />
           </div>
