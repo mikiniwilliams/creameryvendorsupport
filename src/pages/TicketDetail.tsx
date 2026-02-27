@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Send, UserCheck, History } from "lucide-react";
+import { ArrowLeft, Send, UserCheck, History, Pencil, Trash2, Check, X } from "lucide-react";
 import ActivityTimeline from "@/components/ActivityTimeline";
 
 interface Ticket {
