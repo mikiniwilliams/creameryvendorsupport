@@ -1,22 +1,18 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import AppLayout from "@/components/AppLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import ConfirmDialog from "@/components/ConfirmDialog";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Bell, CheckCheck, Ticket, Trash2 } from "lucide-react";
 
 interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  type: string | null;
-  ticket_id: string | null;
-  is_read: boolean;
-  created_at: string;
+  id: string; title: string; message: string; type: string | null;
+  ticket_id: string | null; is_read: boolean; created_at: string;
 }
 
 const Notifications = () => {
@@ -25,15 +21,22 @@ const Notifications = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     if (!user) return;
     const { data } = await supabase.from("notifications").select("*")
       .eq("user_id", user.id).order("created_at", { ascending: false }).limit(100);
     if (data) setNotifications(data as Notification[]);
     setLoading(false);
-  };
+  }, [user]);
 
-  useEffect(() => { fetchNotifications(); }, [user]);
+  useEffect(() => {
+    fetchNotifications();
+    if (!user) return;
+    const channel = supabase.channel(`notif-page-${user.id}`)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` }, () => fetchNotifications())
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user, fetchNotifications]);
 
   const markRead = async (id: string) => {
     await supabase.from("notifications").update({ is_read: true }).eq("id", id);
@@ -56,7 +59,7 @@ const Notifications = () => {
 
   return (
     <AppLayout>
-      <div className="space-y-6 max-w-3xl">
+      <div className="animate-fade-in space-y-6 max-w-3xl">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <Bell className="h-6 w-6" /> Notifications
@@ -99,9 +102,17 @@ const Notifications = () => {
                           </Button>
                         </Link>
                       )}
-                      <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => deleteNotification(n.id)}>
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
+                      <ConfirmDialog
+                        trigger={
+                          <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive">
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        }
+                        title="Delete notification?"
+                        description="This notification will be removed."
+                        confirmLabel="Delete"
+                        onConfirm={() => deleteNotification(n.id)}
+                      />
                     </div>
                   </div>
                 ))}

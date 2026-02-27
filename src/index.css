@@ -93,6 +93,13 @@
 }
 
 @layer utilities {
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
   .status-badge-pending { @apply bg-amber-50 text-amber-700 border border-amber-200; }
   .status-badge-active { @apply bg-emerald-50 text-emerald-700 border border-emerald-200; }
   .status-badge-disabled { @apply bg-red-50 text-red-700 border border-red-200; }
