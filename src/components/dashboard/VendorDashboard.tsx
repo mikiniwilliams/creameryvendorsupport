@@ -22,9 +22,6 @@ const VendorDashboard = () => {
     fetchTickets();
   }, []);
 
-  const openCount = tickets.filter(t => t.status === "open" || t.status === "in_progress").length;
-  const resolvedCount = tickets.filter(t => t.status === "resolved" || t.status === "closed").length;
-
   const [search, setSearch] = useState("");
 
   const openCount = tickets.filter(t => t.status === "open" || t.status === "in_progress").length;
