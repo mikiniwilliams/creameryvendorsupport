@@ -9,7 +9,7 @@ import { backendUrl, supabase } from "@/lib/supabase";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
-const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/support-chat`;
+const CHAT_URL = `${backendUrl}/functions/v1/support-chat`;
 
 const SupportChatbot = () => {
   const [open, setOpen] = useState(false);
