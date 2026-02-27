@@ -95,6 +95,9 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
       <main className="ml-64 flex-1 p-8">
         {children}
       </main>
+
+      {/* AI Support Chatbot */}
+      <SupportChatbot />
     </div>
   );
 };
