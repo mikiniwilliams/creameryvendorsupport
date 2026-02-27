@@ -18,7 +18,7 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sidebar-primary">
             <Ticket className="h-5 w-5 text-sidebar-primary-foreground" />
           </div>
-          <span className="text-lg font-bold text-sidebar-primary-foreground">DeskFlow</span>
+          <span className="text-lg font-bold text-sidebar-primary-foreground">VendorCare Connect</span>
         </div>
 
         <nav className="flex-1 space-y-1 px-3 py-4">
