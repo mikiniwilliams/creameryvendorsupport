@@ -23,6 +23,7 @@ const AdminDashboard = () => {
       const tickets = ticketsRes.data || [];
       const vendors = (vendorsRes.data || []) as any[];
       const profiles = (profilesRes.data || []) as any[];
+      setAllTickets(tickets);
       setStats({
         totalTickets: tickets.length,
         openTickets: tickets.filter((t: any) => t.status === "open" || t.status === "in_progress").length,
