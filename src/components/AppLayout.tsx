@@ -1,7 +1,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Ticket, LayoutDashboard, Building2, LogOut, Plus } from "lucide-react";
+import { Ticket, LayoutDashboard, Building2, LogOut, Plus, Users } from "lucide-react";
 
 const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const { role, profile, signOut } = useAuth();
