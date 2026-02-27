@@ -119,6 +119,44 @@ export type Database = {
           },
         ]
       }
+      ticket_activity: {
+        Row: {
+          activity_type: string
+          created_at: string
+          id: string
+          new_value: string | null
+          old_value: string | null
+          ticket_id: string
+          user_id: string | null
+        }
+        Insert: {
+          activity_type: string
+          created_at?: string
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          ticket_id: string
+          user_id?: string | null
+        }
+        Update: {
+          activity_type?: string
+          created_at?: string
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          ticket_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_activity_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tickets: {
         Row: {
           assigned_to: string | null

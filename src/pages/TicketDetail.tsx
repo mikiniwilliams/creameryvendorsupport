@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Send, UserCheck } from "lucide-react";
+import { ArrowLeft, Send, UserCheck, History } from "lucide-react";
+import ActivityTimeline from "@/components/ActivityTimeline";
 
 interface Ticket {
   id: string;
@@ -212,6 +213,19 @@ const TicketDetail = () => {
                 <p className="text-sm mt-1">{getAssigneeName(ticket.assigned_to)}</p>
               </div>
             )}
+          </CardContent>
+        </Card>
+
+        {/* Activity Timeline */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <History className="h-4 w-4" />
+              Activity
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ActivityTimeline ticketId={ticket.id} key={comments.length} />
           </CardContent>
         </Card>
 
