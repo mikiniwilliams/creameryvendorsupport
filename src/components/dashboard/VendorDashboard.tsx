@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TicketIcon, Clock, CheckCircle2, AlertTriangle } from "lucide-react";
 import { Link } from "react-router-dom";
+import DashboardAnalytics from "@/components/dashboard/DashboardAnalytics";
 
 interface Ticket {
   id: string;
@@ -59,6 +60,9 @@ const VendorDashboard = () => {
         <StatCard icon={<AlertTriangle className="h-5 w-5 text-warning" />} label="In Progress" value={stats.inProgress} />
         <StatCard icon={<CheckCircle2 className="h-5 w-5 text-success" />} label="Resolved" value={stats.resolved} />
       </div>
+
+      {/* Analytics Charts */}
+      <DashboardAnalytics tickets={tickets} />
 
       {loading ? (
         <div className="flex justify-center py-12"><div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" /></div>

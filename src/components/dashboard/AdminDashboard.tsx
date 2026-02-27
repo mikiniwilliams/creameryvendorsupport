@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { TicketIcon, Clock, CheckCircle2, AlertTriangle, Users } from "lucide-react";
 import { Link } from "react-router-dom";
+import DashboardAnalytics from "@/components/dashboard/DashboardAnalytics";
 
 interface Ticket {
   id: string;
@@ -77,6 +78,9 @@ const AdminDashboard = () => {
         <StatCard icon={<AlertTriangle className="h-5 w-5 text-warning" />} label="In Progress" value={stats.inProgress} />
         <StatCard icon={<CheckCircle2 className="h-5 w-5 text-success" />} label="Resolved" value={stats.resolved} />
       </div>
+
+      {/* Analytics Charts */}
+      <DashboardAnalytics tickets={tickets} />
 
       {/* Filters */}
       <Card>
