@@ -52,7 +52,7 @@ const Auth = () => {
             <Ticket className="h-7 w-7 text-primary-foreground" />
           </div>
           <CardTitle className="text-2xl font-bold">VendorCare Connect</CardTitle>
-          <CardDescription>Customer service ticketing platform</CardDescription>
+          <CardDescription>The Creamery Customer Service ticketing platform</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="login">
