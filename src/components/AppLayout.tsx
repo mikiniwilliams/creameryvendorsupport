@@ -2,6 +2,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Ticket, LayoutDashboard, Building2, LogOut, Plus, Users } from "lucide-react";
+import NotificationBell from "@/components/NotificationBell";
 
 const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const { role, profile, signOut } = useAuth();
@@ -61,6 +62,10 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
               </Link>
             </>
           )}
+
+          <div className="pt-2">
+            <NotificationBell />
+          </div>
         </nav>
 
         <div className="border-t border-sidebar-border p-4">
