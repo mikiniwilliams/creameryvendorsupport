@@ -30,8 +30,13 @@ const Vendors = () => {
   useEffect(() => { fetchVendors(); }, []);
 
   const addVendor = async () => {
-    if (!newName.trim()) return;
-    const { error } = await supabase.from("vendors").insert({ name: newName.trim() });
+    const trimmed = newName.trim();
+    if (!trimmed) return;
+    if (trimmed.length > 100) {
+      toast({ title: "Error", description: "Vendor name must be 100 characters or less.", variant: "destructive" });
+      return;
+    }
+    const { error } = await supabase.from("vendors").insert({ name: trimmed });
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
