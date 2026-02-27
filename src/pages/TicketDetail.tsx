@@ -73,7 +73,7 @@ const TicketDetail = () => {
   useEffect(() => { fetchData(); }, [id]);
   useEffect(() => { if (role === "admin") fetchAdminUsers(); }, [role]);
 
-  const updateTicket = async (field: string, value: string) => {
+  const updateTicket = async (field: string, value: string | null) => {
     if (!id) return;
     const { error } = await supabase.from("tickets").update({ [field]: value }).eq("id", id);
     if (error) {
@@ -82,6 +82,12 @@ const TicketDetail = () => {
       setTicket((prev) => prev ? { ...prev, [field]: value } : prev);
       toast({ title: "Ticket updated" });
     }
+  };
+
+  const getAssigneeName = (userId: string | null) => {
+    if (!userId) return null;
+    const admin = adminUsers.find((a) => a.user_id === userId);
+    return admin?.full_name || admin?.email || "Unknown";
   };
 
   const addComment = async () => {
