@@ -1,122 +1,82 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { TicketIcon, Clock, CheckCircle2, AlertTriangle } from "lucide-react";
-import { Link } from "react-router-dom";
-import DashboardAnalytics from "@/components/dashboard/DashboardAnalytics";
-
-interface Ticket {
-  id: string;
-  title: string;
-  status: string;
-  priority: string;
-  created_at: string;
-}
+import { Button } from "@/components/ui/button";
+import { Plus, Ticket, Clock, CheckCircle } from "lucide-react";
 
 const VendorDashboard = () => {
-  const { profile } = useAuth();
-  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const { user } = useAuth();
+  const [tickets, setTickets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchTickets = async () => {
-    if (!profile?.vendor_id) { setLoading(false); return; }
-    const { data } = await supabase
-      .from("tickets")
-      .select("*")
-      .eq("vendor_id", profile.vendor_id)
-      .order("created_at", { ascending: false });
-    if (data) setTickets(data as Ticket[]);
-    setLoading(false);
-  };
-
   useEffect(() => {
+    const fetchTickets = async () => {
+      const { data } = await supabase.from("tickets").select("*").order("created_at", { ascending: false });
+      if (data) setTickets(data);
+      setLoading(false);
+    };
     fetchTickets();
+  }, []);
 
-    if (!profile?.vendor_id) return;
-
-    const channel = supabase
-      .channel('vendor-tickets-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets', filter: `vendor_id=eq.${profile.vendor_id}` }, () => {
-        fetchTickets();
-      })
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
-  }, [profile]);
-
-  const stats = {
-    total: tickets.length,
-    open: tickets.filter((t) => t.status === "open").length,
-    inProgress: tickets.filter((t) => t.status === "in_progress").length,
-    resolved: tickets.filter((t) => t.status === "resolved" || t.status === "closed").length,
-  };
-
-  if (!profile?.vendor_id) {
-    return (
-      <div className="animate-fade-in">
-        <h1 className="text-2xl font-bold mb-2">Vendor Dashboard</h1>
-        <p className="text-muted-foreground">You are not associated with a vendor. Contact an admin.</p>
-      </div>
-    );
-  }
+  const openCount = tickets.filter(t => t.status === "open" || t.status === "in_progress").length;
+  const resolvedCount = tickets.filter(t => t.status === "resolved" || t.status === "closed").length;
 
   return (
-    <div className="animate-fade-in space-y-8">
-      <h1 className="text-2xl font-bold">Your Tickets</h1>
-
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard icon={<TicketIcon className="h-5 w-5 text-primary" />} label="Total" value={stats.total} />
-        <StatCard icon={<Clock className="h-5 w-5 text-accent" />} label="Open" value={stats.open} />
-        <StatCard icon={<AlertTriangle className="h-5 w-5 text-warning" />} label="In Progress" value={stats.inProgress} />
-        <StatCard icon={<CheckCircle2 className="h-5 w-5 text-success" />} label="Resolved" value={stats.resolved} />
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">My Tickets</h1>
+        <Link to="/tickets/new"><Button className="gap-2"><Plus className="h-4 w-4" /> New Ticket</Button></Link>
       </div>
 
-      {/* Analytics Charts */}
-      <DashboardAnalytics tickets={tickets} />
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Card><CardContent className="flex items-center gap-4 p-5">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10"><Ticket className="h-5 w-5 text-primary" /></div>
+          <div><p className="text-2xl font-bold">{tickets.length}</p><p className="text-xs text-muted-foreground">Total</p></div>
+        </CardContent></Card>
+        <Card><CardContent className="flex items-center gap-4 p-5">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50"><Clock className="h-5 w-5 text-blue-600" /></div>
+          <div><p className="text-2xl font-bold">{openCount}</p><p className="text-xs text-muted-foreground">Open</p></div>
+        </CardContent></Card>
+        <Card><CardContent className="flex items-center gap-4 p-5">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50"><CheckCircle className="h-5 w-5 text-emerald-600" /></div>
+          <div><p className="text-2xl font-bold">{resolvedCount}</p><p className="text-xs text-muted-foreground">Resolved</p></div>
+        </CardContent></Card>
+      </div>
 
-      {loading ? (
-        <div className="flex justify-center py-12"><div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" /></div>
-      ) : (
-        <Card>
-          <CardHeader><CardTitle className="text-lg">Recent Tickets</CardTitle></CardHeader>
-          <CardContent>
-            {tickets.length === 0 ? (
-              <p className="text-muted-foreground py-4 text-center">No tickets yet.</p>
-            ) : (
-              <div className="space-y-2">
-                {tickets.map((ticket) => (
-                  <Link key={ticket.id} to={`/tickets/${ticket.id}`} className="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-muted/50">
-                    <div className="min-w-0 flex-1">
-                      <p className="font-medium truncate">{ticket.title}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{new Date(ticket.created_at).toLocaleDateString()}</p>
-                    </div>
-                    <div className="flex items-center gap-2 ml-4">
-                      <Badge variant="outline" className={`ticket-status-${ticket.status}`}>{ticket.status.replace("_", " ")}</Badge>
-                      <Badge variant="outline" className={`priority-${ticket.priority}`}>{ticket.priority}</Badge>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
+      <Card>
+        <CardHeader><CardTitle className="text-base">All Tickets</CardTitle></CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="flex justify-center py-8"><div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" /></div>
+          ) : tickets.length === 0 ? (
+            <div className="text-center py-12">
+              <Ticket className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
+              <p className="text-muted-foreground mb-3">No tickets yet</p>
+              <Link to="/tickets/new"><Button size="sm" className="gap-2"><Plus className="h-3.5 w-3.5" /> Create Your First Ticket</Button></Link>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {tickets.map((t: any) => (
+                <Link key={t.id} to={`/tickets/${t.id}`} className="flex items-center justify-between rounded-lg border p-3 hover:bg-muted/50 transition-colors">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium truncate">{t.title}</p>
+                    <p className="text-xs text-muted-foreground">{t.issue_type || "general"} · {new Date(t.created_at).toLocaleDateString()}</p>
+                  </div>
+                  <div className="flex gap-2 ml-4">
+                    <Badge variant="outline" className={`status-badge-${t.status} text-xs`}>{t.status.replace("_", " ")}</Badge>
+                    <Badge variant="outline" className={`priority-badge-${t.priority} text-xs`}>{t.priority}</Badge>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
-
-const StatCard = ({ icon, label, value }: { icon: React.ReactNode; label: string; value: number }) => (
-  <Card>
-    <CardContent className="flex items-center gap-4 p-5">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">{icon}</div>
-      <div>
-        <p className="text-2xl font-bold">{value}</p>
-        <p className="text-sm text-muted-foreground">{label}</p>
-      </div>
-    </CardContent>
-  </Card>
-);
 
 export default VendorDashboard;

@@ -13,30 +13,12 @@ import { ArrowLeft, Send, UserCheck, History, Pencil, Trash2, Check, X } from "l
 import ActivityTimeline from "@/components/ActivityTimeline";
 
 interface Ticket {
-  id: string;
-  title: string;
-  description: string | null;
-  status: string;
-  priority: string;
-  vendor_id: string;
-  created_by: string;
-  assigned_to: string | null;
-  created_at: string;
-  updated_at: string;
+  id: string; title: string; description: string | null; status: string;
+  priority: string; issue_type: string; vendor_id: string; created_by: string;
+  assigned_to: string | null; created_at: string; updated_at: string;
 }
-
-interface Comment {
-  id: string;
-  content: string;
-  user_id: string;
-  created_at: string;
-}
-
-interface AdminUser {
-  user_id: string;
-  full_name: string | null;
-  email: string | null;
-}
+interface Comment { id: string; content: string; user_id: string; created_at: string; }
+interface AdminUser { user_id: string; full_name: string | null; email: string | null; }
 
 const TicketDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -64,135 +46,75 @@ const TicketDetail = () => {
   };
 
   const fetchAdminUsers = async () => {
-    // Get all admin role entries, then fetch their profiles
     const { data: adminRoles } = await supabase.from("user_roles").select("user_id").eq("role", "admin");
     if (adminRoles && adminRoles.length > 0) {
-      const adminIds = adminRoles.map((r) => r.user_id);
-      const { data: profiles } = await supabase.from("profiles").select("user_id, full_name, email").in("user_id", adminIds);
+      const ids = adminRoles.map((r) => r.user_id);
+      const { data: profiles } = await supabase.from("profiles").select("user_id, full_name, email").in("user_id", ids);
       if (profiles) setAdminUsers(profiles as AdminUser[]);
     }
   };
 
   useEffect(() => {
     fetchData();
-
     if (!id) return;
-
-    const channel = supabase
-      .channel(`ticket-detail-${id}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets', filter: `id=eq.${id}` }, () => {
-        fetchData();
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'comments', filter: `ticket_id=eq.${id}` }, () => {
-        fetchData();
-      })
+    const channel = supabase.channel(`ticket-${id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets', filter: `id=eq.${id}` }, () => fetchData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'comments', filter: `ticket_id=eq.${id}` }, () => fetchData())
       .subscribe();
-
     return () => { supabase.removeChannel(channel); };
   }, [id]);
+
   useEffect(() => { if (role === "admin") fetchAdminUsers(); }, [role]);
 
   const updateTicket = async (field: string, value: string | null) => {
     if (!id) return;
     const { error } = await supabase.from("tickets").update({ [field]: value }).eq("id", id);
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else {
-      setTicket((prev) => prev ? { ...prev, [field]: value } : prev);
-      toast({ title: "Ticket updated" });
-    }
-  };
-
-  const getAssigneeName = (userId: string | null) => {
-    if (!userId) return null;
-    const admin = adminUsers.find((a) => a.user_id === userId);
-    return admin?.full_name || admin?.email || "Unknown";
+    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
+    else { setTicket(prev => prev ? { ...prev, [field]: value } : prev); toast({ title: "Ticket updated" }); }
   };
 
   const addComment = async () => {
     if (!id || !user || !newComment.trim()) return;
-    if (newComment.trim().length > 5000) {
-      toast({ title: "Error", description: "Comment must be 5000 characters or less.", variant: "destructive" });
-      return;
-    }
+    if (newComment.trim().length > 5000) { toast({ title: "Error", description: "Comment too long.", variant: "destructive" }); return; }
     setSubmitting(true);
-    const { error } = await supabase.from("comments").insert({
-      ticket_id: id,
-      user_id: user.id,
-      content: newComment.trim(),
-    });
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else {
-      setNewComment("");
-      fetchData();
-    }
+    const { error } = await supabase.from("comments").insert({ ticket_id: id, user_id: user.id, content: newComment.trim() });
+    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
+    else { setNewComment(""); fetchData(); }
     setSubmitting(false);
   };
 
   const updateComment = async (commentId: string) => {
     if (!editContent.trim()) return;
-    if (editContent.trim().length > 5000) {
-      toast({ title: "Error", description: "Comment must be 5000 characters or less.", variant: "destructive" });
-      return;
-    }
     const { error } = await supabase.from("comments").update({ content: editContent.trim() }).eq("id", commentId);
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else {
-      setEditingId(null);
-      setEditContent("");
-      fetchData();
-    }
+    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
+    else { setEditingId(null); setEditContent(""); fetchData(); }
   };
 
   const deleteComment = async (commentId: string) => {
     const { error } = await supabase.from("comments").delete().eq("id", commentId);
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else {
-      fetchData();
-    }
+    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
+    else fetchData();
   };
 
-  if (loading) {
-    return (
-      <AppLayout>
-        <div className="flex justify-center py-20"><div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" /></div>
-      </AppLayout>
-    );
-  }
-
-  if (!ticket) {
-    return (
-      <AppLayout>
-        <div className="text-center py-20">
-          <p className="text-muted-foreground">Ticket not found.</p>
-          <Button variant="ghost" onClick={() => navigate("/")} className="mt-4">Go back</Button>
-        </div>
-      </AppLayout>
-    );
-  }
+  if (loading) return <AppLayout><div className="flex justify-center py-20"><div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" /></div></AppLayout>;
+  if (!ticket) return <AppLayout><div className="text-center py-20"><p className="text-muted-foreground">Ticket not found.</p><Button variant="ghost" onClick={() => navigate("/")} className="mt-4">Go back</Button></div></AppLayout>;
 
   return (
     <AppLayout>
-      <div className="mx-auto max-w-3xl animate-fade-in space-y-6">
-        <Button variant="ghost" onClick={() => navigate("/")} className="gap-2">
-          <ArrowLeft className="h-4 w-4" /> Back
-        </Button>
+      <div className="mx-auto max-w-3xl space-y-6">
+        <Button variant="ghost" onClick={() => navigate(-1)} className="gap-2"><ArrowLeft className="h-4 w-4" /> Back</Button>
 
         <Card>
           <CardHeader>
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0 flex-1">
                 <CardTitle className="text-xl">{ticket.title}</CardTitle>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Created {new Date(ticket.created_at).toLocaleString()}
-                </p>
+                <p className="text-sm text-muted-foreground mt-1">Created {new Date(ticket.created_at).toLocaleString()}</p>
               </div>
-              <div className="flex gap-2">
-                <Badge variant="outline" className={`ticket-status-${ticket.status}`}>{ticket.status.replace("_", " ")}</Badge>
-                <Badge variant="outline" className={`priority-${ticket.priority}`}>{ticket.priority}</Badge>
+              <div className="flex flex-wrap gap-2">
+                <Badge variant="outline" className={`status-badge-${ticket.status}`}>{ticket.status.replace("_", " ")}</Badge>
+                <Badge variant="outline" className={`priority-badge-${ticket.priority}`}>{ticket.priority}</Badge>
+                <Badge variant="outline" className="capitalize">{ticket.issue_type}</Badge>
               </div>
             </div>
           </CardHeader>
@@ -204,7 +126,6 @@ const TicketDetail = () => {
               </div>
             )}
 
-            {/* Admin controls */}
             {role === "admin" && (
               <div className="flex flex-wrap gap-4 border-t pt-4">
                 <div className="space-y-1">
@@ -232,104 +153,55 @@ const TicketDetail = () => {
                   </Select>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-muted-foreground flex items-center gap-1">
-                    <UserCheck className="h-3 w-3" /> Assign To
-                  </label>
-                  <Select
-                    value={ticket.assigned_to || "unassigned"}
-                    onValueChange={(v) => updateTicket("assigned_to", v === "unassigned" ? null : v)}
-                  >
+                  <label className="text-xs font-medium text-muted-foreground flex items-center gap-1"><UserCheck className="h-3 w-3" /> Assign To</label>
+                  <Select value={ticket.assigned_to || "unassigned"} onValueChange={(v) => updateTicket("assigned_to", v === "unassigned" ? null : v)}>
                     <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="unassigned">Unassigned</SelectItem>
-                      {adminUsers.map((a) => (
-                        <SelectItem key={a.user_id} value={a.user_id}>
-                          {a.full_name || a.email || "Admin"}
-                        </SelectItem>
-                      ))}
+                      {adminUsers.map((a) => <SelectItem key={a.user_id} value={a.user_id}>{a.full_name || a.email || "Admin"}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
               </div>
             )}
-
-            {/* Show assignee for non-admins */}
-            {role !== "admin" && ticket.assigned_to && (
-              <div className="border-t pt-4">
-                <p className="text-xs font-medium text-muted-foreground">Assigned to</p>
-                <p className="text-sm mt-1">{getAssigneeName(ticket.assigned_to)}</p>
-              </div>
-            )}
           </CardContent>
         </Card>
 
-        {/* Activity Timeline */}
         <Card>
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <History className="h-4 w-4" />
-              Activity
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ActivityTimeline ticketId={ticket.id} key={comments.length} />
-          </CardContent>
+          <CardHeader><CardTitle className="text-lg flex items-center gap-2"><History className="h-4 w-4" /> Activity</CardTitle></CardHeader>
+          <CardContent><ActivityTimeline ticketId={ticket.id} key={comments.length} /></CardContent>
         </Card>
 
-        {/* Comments */}
         <Card>
           <CardHeader><CardTitle className="text-lg">Comments ({comments.length})</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             {comments.length === 0 && <p className="text-sm text-muted-foreground">No comments yet.</p>}
             {comments.map((c) => {
               const isOwn = c.user_id === user?.id;
-              const canEdit = isOwn;
               const canDelete = isOwn || role === "admin";
-
               return (
                 <div key={c.id} className="rounded-lg border p-4 group">
                   {editingId === c.id ? (
                     <div className="space-y-2">
-                      <Textarea
-                        value={editContent}
-                        onChange={(e) => setEditContent(e.target.value)}
-                        rows={2}
-                        className="text-sm"
-                      />
+                      <Textarea value={editContent} onChange={(e) => setEditContent(e.target.value)} rows={2} className="text-sm" />
                       <div className="flex gap-2">
-                        <Button size="sm" onClick={() => updateComment(c.id)} disabled={!editContent.trim()} className="gap-1">
-                          <Check className="h-3 w-3" /> Save
-                        </Button>
-                        <Button size="sm" variant="ghost" onClick={() => { setEditingId(null); setEditContent(""); }} className="gap-1">
-                          <X className="h-3 w-3" /> Cancel
-                        </Button>
+                        <Button size="sm" onClick={() => updateComment(c.id)} disabled={!editContent.trim()} className="gap-1"><Check className="h-3 w-3" /> Save</Button>
+                        <Button size="sm" variant="ghost" onClick={() => { setEditingId(null); setEditContent(""); }} className="gap-1"><X className="h-3 w-3" /> Cancel</Button>
                       </div>
                     </div>
                   ) : (
                     <>
                       <div className="flex items-start justify-between gap-2">
                         <p className="text-sm whitespace-pre-wrap flex-1">{c.content}</p>
-                        {(canEdit || canDelete) && (
+                        {(isOwn || canDelete) && (
                           <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                            {canEdit && (
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="h-7 w-7"
-                                onClick={() => { setEditingId(c.id); setEditContent(c.content); }}
-                                title="Edit comment"
-                              >
+                            {isOwn && (
+                              <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { setEditingId(c.id); setEditContent(c.content); }}>
                                 <Pencil className="h-3 w-3" />
                               </Button>
                             )}
                             {canDelete && (
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="h-7 w-7 text-destructive hover:text-destructive"
-                                onClick={() => deleteComment(c.id)}
-                                title="Delete comment"
-                              >
+                              <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => deleteComment(c.id)}>
                                 <Trash2 className="h-3 w-3" />
                               </Button>
                             )}
@@ -342,18 +214,9 @@ const TicketDetail = () => {
                 </div>
               );
             })}
-
             <div className="flex gap-2 pt-2">
-              <Textarea
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-                placeholder="Add a comment…"
-                rows={2}
-                className="flex-1"
-              />
-              <Button onClick={addComment} disabled={submitting || !newComment.trim()} size="icon" className="shrink-0 self-end">
-                <Send className="h-4 w-4" />
-              </Button>
+              <Textarea value={newComment} onChange={(e) => setNewComment(e.target.value)} placeholder="Add a comment…" rows={2} className="flex-1" />
+              <Button onClick={addComment} disabled={submitting || !newComment.trim()} size="icon" className="shrink-0 self-end"><Send className="h-4 w-4" /></Button>
             </div>
           </CardContent>
         </Card>

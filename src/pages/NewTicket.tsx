@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import AppLayout from "@/components/AppLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,6 +18,7 @@ const NewTicket = () => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState("medium");
+  const [issueType, setIssueType] = useState("general");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -30,15 +31,12 @@ const NewTicket = () => {
       toast({ title: "Error", description: "Title must be 200 characters or less.", variant: "destructive" });
       return;
     }
-    if (description.length > 5000) {
-      toast({ title: "Error", description: "Description must be 5000 characters or less.", variant: "destructive" });
-      return;
-    }
     setLoading(true);
     const { error } = await supabase.from("tickets").insert({
-      title,
-      description,
+      title: title.trim(),
+      description: description.trim() || null,
       priority,
+      issue_type: issueType,
       vendor_id: profile.vendor_id,
       created_by: user.id,
     });
@@ -54,7 +52,7 @@ const NewTicket = () => {
   if (!profile?.vendor_id && role !== "admin") {
     return (
       <AppLayout>
-        <div className="animate-fade-in">
+        <div>
           <h1 className="text-2xl font-bold mb-2">New Ticket</h1>
           <p className="text-muted-foreground">You must be associated with a vendor to create tickets.</p>
         </div>
@@ -64,30 +62,44 @@ const NewTicket = () => {
 
   return (
     <AppLayout>
-      <div className="mx-auto max-w-2xl animate-fade-in">
+      <div className="mx-auto max-w-2xl">
         <h1 className="text-2xl font-bold mb-6">Create New Ticket</h1>
         <Card>
           <CardContent className="pt-6">
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
-                <Label htmlFor="title">Title</Label>
-                <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Brief description of the issue" required />
+                <Label htmlFor="title">Title *</Label>
+                <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Brief summary of the issue" required />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Issue Type</Label>
+                  <Select value={issueType} onValueChange={setIssueType}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="bug">Bug</SelectItem>
+                      <SelectItem value="technical">Technical</SelectItem>
+                      <SelectItem value="billing">Billing</SelectItem>
+                      <SelectItem value="general">General</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Priority</Label>
+                  <Select value={priority} onValueChange={setPriority}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="low">Low</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="high">High</SelectItem>
+                      <SelectItem value="urgent">Urgent</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="description">Description</Label>
-                <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Detailed explanation…" rows={5} />
-              </div>
-              <div className="space-y-2">
-                <Label>Priority</Label>
-                <Select value={priority} onValueChange={setPriority}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="low">Low</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="high">High</SelectItem>
-                    <SelectItem value="urgent">Urgent</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Provide details about the issue…" rows={5} />
               </div>
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Creating…" : "Create Ticket"}
