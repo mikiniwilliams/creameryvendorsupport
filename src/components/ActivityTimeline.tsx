@@ -16,7 +16,7 @@ interface Activity {
 }
 
 interface ProfileMap {
-  [userId: string]: { full_name: string | null; email: string | null };
+  [userId: string]: { full_name: string | null };
 }
 
 const activityConfig: Record<string, { icon: React.ReactNode; label: string; color: string }> = {
@@ -73,7 +73,7 @@ const ActivityTimeline = ({ ticketId }: { ticketId: string }) => {
         if (userIds.length > 0) {
           const { data: profileData } = await supabase
             .from("profiles")
-            .select("user_id, full_name, email")
+            .select("user_id, full_name")
             .in("user_id", userIds);
           if (profileData) {
             const map: ProfileMap = {};
@@ -90,7 +90,7 @@ const ActivityTimeline = ({ ticketId }: { ticketId: string }) => {
   const getUserName = (userId: string | null) => {
     if (!userId) return "System";
     const p = profiles[userId];
-    return p?.full_name || p?.email || "User";
+    return p?.full_name || "User";
   };
 
   if (loading) {

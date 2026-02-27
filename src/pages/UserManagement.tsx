@@ -8,7 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Users, Shield, Building2 } from "lucide-react";
-import { Navigate } from "react-router-dom";
 
 interface Profile {
   id: string;
@@ -83,8 +82,6 @@ const UserManagement = () => {
       fetchData();
     }
   };
-
-  if (role !== "admin") return <Navigate to="/" replace />;
 
   return (
     <AppLayout>

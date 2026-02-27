@@ -93,6 +93,10 @@ const TicketDetail = () => {
 
   const addComment = async () => {
     if (!id || !user || !newComment.trim()) return;
+    if (newComment.trim().length > 5000) {
+      toast({ title: "Error", description: "Comment must be 5000 characters or less.", variant: "destructive" });
+      return;
+    }
     setSubmitting(true);
     const { error } = await supabase.from("comments").insert({
       ticket_id: id,

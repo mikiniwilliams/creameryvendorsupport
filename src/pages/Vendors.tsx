@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Building2 } from "lucide-react";
-import { Navigate } from "react-router-dom";
 
 interface Vendor {
   id: string;
@@ -31,8 +30,13 @@ const Vendors = () => {
   useEffect(() => { fetchVendors(); }, []);
 
   const addVendor = async () => {
-    if (!newName.trim()) return;
-    const { error } = await supabase.from("vendors").insert({ name: newName.trim() });
+    const trimmed = newName.trim();
+    if (!trimmed) return;
+    if (trimmed.length > 100) {
+      toast({ title: "Error", description: "Vendor name must be 100 characters or less.", variant: "destructive" });
+      return;
+    }
+    const { error } = await supabase.from("vendors").insert({ name: trimmed });
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
@@ -41,8 +45,6 @@ const Vendors = () => {
       toast({ title: "Vendor added" });
     }
   };
-
-  if (role !== "admin") return <Navigate to="/" replace />;
 
   return (
     <AppLayout>
