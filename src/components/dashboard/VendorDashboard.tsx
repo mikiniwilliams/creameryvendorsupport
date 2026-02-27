@@ -89,6 +89,8 @@ const VendorDashboard = () => {
           )}
         </CardContent>
       </Card>
+
+      <DashboardAnalytics tickets={tickets} />
     </div>
   );
 };
