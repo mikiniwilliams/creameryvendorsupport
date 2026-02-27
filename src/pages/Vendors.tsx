@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Building2 } from "lucide-react";
-import { Navigate } from "react-router-dom";
 
 interface Vendor {
   id: string;
