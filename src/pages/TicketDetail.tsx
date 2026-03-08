@@ -175,12 +175,22 @@ const TicketDetail = () => {
                   </Select>
                 </div>
                 <div className="space-y-1">
+                  <label className="text-xs font-medium text-muted-foreground">Vendor</label>
+                  <Select value={ticket.vendor_id} onValueChange={handleVendorChange}>
+                    <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {vendors.map((v) => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
                   <label className="text-xs font-medium text-muted-foreground flex items-center gap-1"><UserCheck className="h-3 w-3" /> Assign To</label>
                   <Select value={ticket.assigned_to || "unassigned"} onValueChange={(v) => updateTicket("assigned_to", v === "unassigned" ? null : v)}>
                     <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="unassigned">Unassigned</SelectItem>
-                      {adminUsers.map((a) => <SelectItem key={a.user_id} value={a.user_id}>{a.full_name || a.email || "Admin"}</SelectItem>)}
+                      {vendorUsers.map((u) => <SelectItem key={u.user_id} value={u.user_id}>{u.full_name || u.email || "User"}</SelectItem>)}
+                      {vendorUsers.length === 0 && <SelectItem value="__none" disabled>No active users</SelectItem>}
                     </SelectContent>
                   </Select>
                 </div>
