@@ -112,9 +112,11 @@ const ActivityTimeline = ({ ticketId, userRole }: { ticketId: string; userRole?:
       {/* Timeline line */}
       <div className="absolute left-[17px] top-2 bottom-2 w-px bg-border" />
 
-      {activities.map((activity, index) => {
+      {activities
+        .filter((a) => userRole === "admin" || VENDOR_VISIBLE_TYPES.includes(a.activity_type))
+        .map((activity, index, filtered) => {
         const config = activityConfig[activity.activity_type] || activityConfig.comment;
-        const isLast = index === activities.length - 1;
+        const isLast = index === filtered.length - 1;
 
         return (
           <div key={activity.id} className={`relative flex gap-4 ${isLast ? "" : "pb-5"}`}>
