@@ -52,7 +52,9 @@ const formatValue = (value: string | null) => {
   return value.replace(/_/g, " ");
 };
 
-const ActivityTimeline = ({ ticketId }: { ticketId: string }) => {
+const VENDOR_VISIBLE_TYPES = ["status_change", "comment"];
+
+const ActivityTimeline = ({ ticketId, userRole }: { ticketId: string; userRole?: string | null }) => {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [profiles, setProfiles] = useState<ProfileMap>({});
   const [loading, setLoading] = useState(true);
