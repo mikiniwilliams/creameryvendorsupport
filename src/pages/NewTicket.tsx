@@ -52,16 +52,25 @@ const NewTicket = () => {
 
   useEffect(() => {
     if (!isAdmin) return;
-    const fetchVendors = async () => {
-      const { data } = await supabase
-        .from("vendors")
-        .select("id, name, status")
-        .eq("status", "active")
-        .order("name");
-      setVendors(data || []);
+    const fetchAdminData = async () => {
+      const [vendorsRes, templatesRes] = await Promise.all([
+        supabase.from("vendors").select("id, name, status").eq("status", "active").order("name"),
+        supabase.from("ticket_templates").select("id, name, title, description, priority, issue_type").order("name"),
+      ]);
+      setVendors(vendorsRes.data || []);
+      setTemplates((templatesRes.data as TicketTemplate[]) || []);
     };
-    fetchVendors();
+    fetchAdminData();
   }, [isAdmin]);
+
+  const applyTemplate = (templateId: string) => {
+    const t = templates.find((tpl) => tpl.id === templateId);
+    if (!t) return;
+    setTitle(t.title);
+    setDescription(t.description || "");
+    setPriority(t.priority);
+    setIssueType(t.issue_type);
+  };
 
   // Fetch users belonging to selected vendor
   useEffect(() => {
