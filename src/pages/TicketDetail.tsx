@@ -30,7 +30,8 @@ const TicketDetail = () => {
   const { toast } = useToast();
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
-  const [adminUsers, setAdminUsers] = useState<AdminUser[]>([]);
+  const [vendorUsers, setVendorUsers] = useState<ProfileUser[]>([]);
+  const [vendors, setVendors] = useState<Vendor[]>([]);
   const [newComment, setNewComment] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
