@@ -23,6 +23,15 @@ interface AdminUser {
   email: string | null;
 }
 
+interface TicketTemplate {
+  id: string;
+  name: string;
+  title: string;
+  description: string | null;
+  priority: string;
+  issue_type: string;
+}
+
 const NewTicket = () => {
   const { user, profile, role } = useAuth();
   const navigate = useNavigate();
@@ -38,20 +47,30 @@ const NewTicket = () => {
   const [vendorUsers, setVendorUsers] = useState<AdminUser[]>([]);
   const [selectedVendorId, setSelectedVendorId] = useState("");
   const [assignedTo, setAssignedTo] = useState("");
+  const [templates, setTemplates] = useState<TicketTemplate[]>([]);
   const isAdmin = role === "admin";
 
   useEffect(() => {
     if (!isAdmin) return;
-    const fetchVendors = async () => {
-      const { data } = await supabase
-        .from("vendors")
-        .select("id, name, status")
-        .eq("status", "active")
-        .order("name");
-      setVendors(data || []);
+    const fetchAdminData = async () => {
+      const [vendorsRes, templatesRes] = await Promise.all([
+        supabase.from("vendors").select("id, name, status").eq("status", "active").order("name"),
+        supabase.from("ticket_templates").select("id, name, title, description, priority, issue_type").order("name"),
+      ]);
+      setVendors(vendorsRes.data || []);
+      setTemplates((templatesRes.data as TicketTemplate[]) || []);
     };
-    fetchVendors();
+    fetchAdminData();
   }, [isAdmin]);
+
+  const applyTemplate = (templateId: string) => {
+    const t = templates.find((tpl) => tpl.id === templateId);
+    if (!t) return;
+    setTitle(t.title);
+    setDescription(t.description || "");
+    setPriority(t.priority);
+    setIssueType(t.issue_type);
+  };
 
   // Fetch users belonging to selected vendor
   useEffect(() => {
@@ -131,6 +150,20 @@ const NewTicket = () => {
         <Card>
           <CardContent className="pt-6">
             <form onSubmit={handleSubmit} className="space-y-5">
+              {isAdmin && templates.length > 0 && (
+                <div className="space-y-2">
+                  <Label>Load from Template</Label>
+                  <Select onValueChange={applyTemplate}>
+                    <SelectTrigger><SelectValue placeholder="Select a template…" /></SelectTrigger>
+                    <SelectContent>
+                      {templates.map((t) => (
+                        <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
               <div className="space-y-2">
                 <Label htmlFor="title">Title *</Label>
                 <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Brief summary of the issue" required />

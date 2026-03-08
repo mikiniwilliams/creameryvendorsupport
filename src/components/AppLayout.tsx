@@ -8,7 +8,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import NotificationBell from "@/components/NotificationBell";
 import {
   LayoutDashboard, Plus, Building2, Users, Bell, LogOut,
-  CheckCircle, Ticket, BookOpen, Menu
+  CheckCircle, Ticket, BookOpen, Menu, FileText
 } from "lucide-react";
 
 const AppLayout = ({ children }: { children: React.ReactNode }) => {
@@ -58,6 +58,9 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
             </Link>
             <Link to="/admin/tickets" className={navClass("/admin/tickets")} onClick={() => setOpen(false)}>
               <Ticket className="h-4 w-4" /> All Tickets
+            </Link>
+            <Link to="/admin/templates" className={navClass("/admin/templates")} onClick={() => setOpen(false)}>
+              <FileText className="h-4 w-4" /> Templates
             </Link>
             <Link to="/vendors" className={navClass("/vendors")} onClick={() => setOpen(false)}>
               <Building2 className="h-4 w-4" /> Vendors

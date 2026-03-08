@@ -17,6 +17,7 @@ import KnowledgeBase from "./pages/KnowledgeBase";
 import Notifications from "./pages/Notifications";
 import AdminApprovals from "./pages/AdminApprovals";
 import AdminTickets from "./pages/AdminTickets";
+import TicketTemplates from "./pages/TicketTemplates";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -38,6 +39,7 @@ const App = () => (
             <Route path="/knowledge-base" element={<ProtectedRoute><KnowledgeBase /></ProtectedRoute>} />
             <Route path="/admin/approvals" element={<ProtectedAdminRoute><AdminApprovals /></ProtectedAdminRoute>} />
             <Route path="/admin/tickets" element={<ProtectedAdminRoute><AdminTickets /></ProtectedAdminRoute>} />
+            <Route path="/admin/templates" element={<ProtectedAdminRoute><TicketTemplates /></ProtectedAdminRoute>} />
             <Route path="/vendors" element={<ProtectedAdminRoute><Vendors /></ProtectedAdminRoute>} />
             <Route path="/users" element={<ProtectedAdminRoute><UserManagement /></ProtectedAdminRoute>} />
             <Route path="*" element={<NotFound />} />
