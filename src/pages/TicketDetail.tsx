@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Send, UserCheck, History, Pencil, Trash2, Check, X } from "lucide-react";
 import ActivityTimeline from "@/components/ActivityTimeline";
+import { Label } from "@/components/ui/label";
 
 interface Ticket {
   id: string; title: string; description: string | null; status: string;
