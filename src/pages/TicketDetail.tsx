@@ -196,6 +196,23 @@ const TicketDetail = () => {
                 </div>
               </div>
             )}
+
+            {role === "vendor" && (
+              <div className="flex flex-wrap gap-4 border-t pt-4">
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-muted-foreground">Update Status</label>
+                  <Select value={ticket.status} onValueChange={(v) => updateTicket("status", v)}>
+                    <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="open">Open</SelectItem>
+                      <SelectItem value="in_progress">In Progress</SelectItem>
+                      <SelectItem value="resolved">Resolved</SelectItem>
+                      <SelectItem value="closed">Closed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
