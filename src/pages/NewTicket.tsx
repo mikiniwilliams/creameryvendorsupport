@@ -23,6 +23,15 @@ interface AdminUser {
   email: string | null;
 }
 
+interface TicketTemplate {
+  id: string;
+  name: string;
+  title: string;
+  description: string | null;
+  priority: string;
+  issue_type: string;
+}
+
 const NewTicket = () => {
   const { user, profile, role } = useAuth();
   const navigate = useNavigate();
@@ -38,6 +47,7 @@ const NewTicket = () => {
   const [vendorUsers, setVendorUsers] = useState<AdminUser[]>([]);
   const [selectedVendorId, setSelectedVendorId] = useState("");
   const [assignedTo, setAssignedTo] = useState("");
+  const [templates, setTemplates] = useState<TicketTemplate[]>([]);
   const isAdmin = role === "admin";
 
   useEffect(() => {
