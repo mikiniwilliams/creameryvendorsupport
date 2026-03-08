@@ -17,6 +17,7 @@ import KnowledgeBase from "./pages/KnowledgeBase";
 import Notifications from "./pages/Notifications";
 import AdminApprovals from "./pages/AdminApprovals";
 import AdminTickets from "./pages/AdminTickets";
+import TicketTemplates from "./pages/TicketTemplates";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
