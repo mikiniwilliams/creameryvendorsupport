@@ -49,13 +49,14 @@ const TicketDetail = () => {
     setLoading(false);
   };
 
-  const fetchAdminUsers = async () => {
-    const { data: adminRoles } = await supabase.from("user_roles").select("user_id").eq("role", "admin");
-    if (adminRoles && adminRoles.length > 0) {
-      const ids = adminRoles.map((r) => r.user_id);
-      const { data: profiles } = await supabase.from("profiles").select("user_id, full_name, email").in("user_id", ids);
-      if (profiles) setAdminUsers(profiles as AdminUser[]);
-    }
+  const fetchVendorUsers = async (vendorId: string) => {
+    const { data } = await supabase.from("profiles").select("user_id, full_name, email").eq("vendor_id", vendorId).eq("status", "active");
+    setVendorUsers((data as ProfileUser[]) || []);
+  };
+
+  const fetchVendors = async () => {
+    const { data } = await supabase.from("vendors").select("id, name").eq("status", "active").order("name");
+    setVendors((data as Vendor[]) || []);
   };
 
   useEffect(() => {
