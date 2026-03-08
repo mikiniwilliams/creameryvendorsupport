@@ -150,6 +150,20 @@ const NewTicket = () => {
         <Card>
           <CardContent className="pt-6">
             <form onSubmit={handleSubmit} className="space-y-5">
+              {isAdmin && templates.length > 0 && (
+                <div className="space-y-2">
+                  <Label>Load from Template</Label>
+                  <Select onValueChange={applyTemplate}>
+                    <SelectTrigger><SelectValue placeholder="Select a template…" /></SelectTrigger>
+                    <SelectContent>
+                      {templates.map((t) => (
+                        <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
               <div className="space-y-2">
                 <Label htmlFor="title">Title *</Label>
                 <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Brief summary of the issue" required />

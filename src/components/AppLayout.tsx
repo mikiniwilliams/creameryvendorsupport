@@ -8,7 +8,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import NotificationBell from "@/components/NotificationBell";
 import {
   LayoutDashboard, Plus, Building2, Users, Bell, LogOut,
-  CheckCircle, Ticket, BookOpen, Menu
+  CheckCircle, Ticket, BookOpen, Menu, FileText
 } from "lucide-react";
 
 const AppLayout = ({ children }: { children: React.ReactNode }) => {
