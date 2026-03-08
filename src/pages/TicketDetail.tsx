@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Send, UserCheck, History, Pencil, Trash2, Check, X } from "lucide-react";
 import ActivityTimeline from "@/components/ActivityTimeline";
+import { Label } from "@/components/ui/label";
 
 interface Ticket {
   id: string; title: string; description: string | null; status: string;
@@ -19,7 +20,8 @@ interface Ticket {
   assigned_to: string | null; created_at: string; updated_at: string;
 }
 interface Comment { id: string; content: string; user_id: string; created_at: string; }
-interface AdminUser { user_id: string; full_name: string | null; email: string | null; }
+interface ProfileUser { user_id: string; full_name: string | null; email: string | null; }
+interface Vendor { id: string; name: string; }
 
 const TicketDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -28,7 +30,8 @@ const TicketDetail = () => {
   const { toast } = useToast();
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
-  const [adminUsers, setAdminUsers] = useState<AdminUser[]>([]);
+  const [vendorUsers, setVendorUsers] = useState<ProfileUser[]>([]);
+  const [vendors, setVendors] = useState<Vendor[]>([]);
   const [newComment, setNewComment] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -46,13 +49,14 @@ const TicketDetail = () => {
     setLoading(false);
   };
 
-  const fetchAdminUsers = async () => {
-    const { data: adminRoles } = await supabase.from("user_roles").select("user_id").eq("role", "admin");
-    if (adminRoles && adminRoles.length > 0) {
-      const ids = adminRoles.map((r) => r.user_id);
-      const { data: profiles } = await supabase.from("profiles").select("user_id, full_name, email").in("user_id", ids);
-      if (profiles) setAdminUsers(profiles as AdminUser[]);
-    }
+  const fetchVendorUsers = async (vendorId: string) => {
+    const { data } = await supabase.from("profiles").select("user_id, full_name, email").eq("vendor_id", vendorId).eq("status", "active");
+    setVendorUsers((data as ProfileUser[]) || []);
+  };
+
+  const fetchVendors = async () => {
+    const { data } = await supabase.from("vendors").select("id, name").eq("status", "active").order("name");
+    setVendors((data as Vendor[]) || []);
   };
 
   useEffect(() => {
@@ -65,7 +69,24 @@ const TicketDetail = () => {
     return () => { supabase.removeChannel(channel); };
   }, [id]);
 
-  useEffect(() => { if (role === "admin") fetchAdminUsers(); }, [role]);
+  useEffect(() => {
+    if (role === "admin") fetchVendors();
+  }, [role]);
+
+  useEffect(() => {
+    if (role === "admin" && ticket?.vendor_id) fetchVendorUsers(ticket.vendor_id);
+  }, [role, ticket?.vendor_id]);
+
+  const handleVendorChange = async (newVendorId: string) => {
+    if (!id) return;
+    const { error } = await supabase.from("tickets").update({ vendor_id: newVendorId, assigned_to: null }).eq("id", id);
+    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
+    else {
+      setTicket(prev => prev ? { ...prev, vendor_id: newVendorId, assigned_to: null } : prev);
+      toast({ title: "Vendor updated" });
+      fetchVendorUsers(newVendorId);
+    }
+  };
 
   const updateTicket = async (field: string, value: string | null) => {
     if (!id) return;
@@ -154,12 +175,22 @@ const TicketDetail = () => {
                   </Select>
                 </div>
                 <div className="space-y-1">
+                  <label className="text-xs font-medium text-muted-foreground">Vendor</label>
+                  <Select value={ticket.vendor_id} onValueChange={handleVendorChange}>
+                    <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {vendors.map((v) => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
                   <label className="text-xs font-medium text-muted-foreground flex items-center gap-1"><UserCheck className="h-3 w-3" /> Assign To</label>
                   <Select value={ticket.assigned_to || "unassigned"} onValueChange={(v) => updateTicket("assigned_to", v === "unassigned" ? null : v)}>
                     <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="unassigned">Unassigned</SelectItem>
-                      {adminUsers.map((a) => <SelectItem key={a.user_id} value={a.user_id}>{a.full_name || a.email || "Admin"}</SelectItem>)}
+                      {vendorUsers.map((u) => <SelectItem key={u.user_id} value={u.user_id}>{u.full_name || u.email || "User"}</SelectItem>)}
+                      {vendorUsers.length === 0 && <SelectItem value="__none" disabled>No active users</SelectItem>}
                     </SelectContent>
                   </Select>
                 </div>
