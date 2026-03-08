@@ -50,6 +50,9 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
             <div className="pt-4 pb-1 px-3">
               <p className="text-[10px] uppercase tracking-wider text-sidebar-foreground/40 font-semibold">Admin</p>
             </div>
+            <Link to="/tickets/new" className={navClass("/tickets/new")} onClick={() => setOpen(false)}>
+              <Plus className="h-4 w-4" /> Create Ticket
+            </Link>
             <Link to="/admin/approvals" className={navClass("/admin/approvals")} onClick={() => setOpen(false)}>
               <CheckCircle className="h-4 w-4" /> Approvals
             </Link>
