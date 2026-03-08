@@ -59,6 +59,9 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
             <Link to="/admin/tickets" className={navClass("/admin/tickets")} onClick={() => setOpen(false)}>
               <Ticket className="h-4 w-4" /> All Tickets
             </Link>
+            <Link to="/admin/templates" className={navClass("/admin/templates")} onClick={() => setOpen(false)}>
+              <FileText className="h-4 w-4" /> Templates
+            </Link>
             <Link to="/vendors" className={navClass("/vendors")} onClick={() => setOpen(false)}>
               <Building2 className="h-4 w-4" /> Vendors
             </Link>
