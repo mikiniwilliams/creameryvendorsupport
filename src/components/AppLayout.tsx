@@ -102,39 +102,16 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
     </>
   );
 
-  if (isMobile) {
-    return (
-      <div className="min-h-screen">
-        <header className="sticky top-0 z-30 flex items-center justify-between border-b bg-background px-4 py-3">
-          <Sheet open={open} onOpenChange={setOpen}>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon"><Menu className="h-5 w-5" /></Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-60 p-0 bg-sidebar-background border-sidebar-border">
-              <div className="flex h-full flex-col">{navContent}</div>
-            </SheetContent>
-          </Sheet>
-          <div className="flex items-center gap-2">
-            <Ticket className="h-4 w-4 text-primary" />
-            <span className="font-semibold text-sm">VendorCare</span>
-          </div>
-          <NotificationBell />
-        </header>
-        <main className="p-4">{children}</main>
-      </div>
-    );
-  }
-
   return (
     <div className="flex min-h-screen">
-      <aside className="fixed inset-y-0 left-0 z-30 flex w-60 flex-col bg-sidebar-background border-r border-sidebar-border">
+      <aside className={`fixed inset-y-0 left-0 z-30 flex flex-col bg-sidebar-background border-r border-sidebar-border ${isMobile ? "w-48" : "w-60"}`}>
         {navContent}
       </aside>
-      <div className="ml-60 flex-1">
+      <div className={`${isMobile ? "ml-48" : "ml-60"} flex-1`}>
         <header className="sticky top-0 z-20 flex items-center justify-end border-b bg-background/80 backdrop-blur-sm px-6 py-3">
           <NotificationBell />
         </header>
-        <main className="p-6">{children}</main>
+        <main className={`${isMobile ? "p-3" : "p-6"}`}>{children}</main>
       </div>
     </div>
   );
