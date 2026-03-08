@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,6 +11,18 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 
+interface Vendor {
+  id: string;
+  name: string;
+  status: string;
+}
+
+interface AdminUser {
+  user_id: string;
+  full_name: string | null;
+  email: string | null;
+}
+
 const NewTicket = () => {
   const { user, profile, role } = useAuth();
   const navigate = useNavigate();
@@ -21,35 +33,87 @@ const NewTicket = () => {
   const [issueType, setIssueType] = useState("general");
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user || !profile?.vendor_id) {
-      toast({ title: "Error", description: "You must be associated with a vendor.", variant: "destructive" });
+  // Admin-specific state
+  const [vendors, setVendors] = useState<Vendor[]>([]);
+  const [vendorUsers, setVendorUsers] = useState<AdminUser[]>([]);
+  const [selectedVendorId, setSelectedVendorId] = useState("");
+  const [assignedTo, setAssignedTo] = useState("");
+  const isAdmin = role === "admin";
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    const fetchVendors = async () => {
+      const { data } = await supabase
+        .from("vendors")
+        .select("id, name, status")
+        .eq("status", "active")
+        .order("name");
+      setVendors(data || []);
+    };
+    fetchVendors();
+  }, [isAdmin]);
+
+  // Fetch users belonging to selected vendor
+  useEffect(() => {
+    if (!isAdmin || !selectedVendorId) {
+      setVendorUsers([]);
+      setAssignedTo("");
       return;
     }
+    const fetchVendorUsers = async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("user_id, full_name, email")
+        .eq("vendor_id", selectedVendorId)
+        .eq("status", "active");
+      setVendorUsers((data as AdminUser[]) || []);
+    };
+    fetchVendorUsers();
+  }, [isAdmin, selectedVendorId]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) {
+      toast({ title: "Error", description: "You must be logged in.", variant: "destructive" });
+      return;
+    }
+
+    const vendorId = isAdmin ? selectedVendorId : profile?.vendor_id;
+    if (!vendorId) {
+      toast({
+        title: "Error",
+        description: isAdmin ? "Please select a vendor." : "You must be associated with a vendor.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (title.trim().length > 200) {
       toast({ title: "Error", description: "Title must be 200 characters or less.", variant: "destructive" });
       return;
     }
+
     setLoading(true);
     const { error } = await supabase.from("tickets").insert({
       title: title.trim(),
       description: description.trim() || null,
       priority,
       issue_type: issueType,
-      vendor_id: profile.vendor_id,
+      vendor_id: vendorId,
       created_by: user.id,
+      assigned_to: isAdmin && assignedTo ? assignedTo : null,
     });
+
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Ticket created" });
-      navigate("/");
+      navigate(isAdmin ? "/admin/tickets" : "/");
     }
     setLoading(false);
   };
 
-  if (!profile?.vendor_id && role !== "admin") {
+  if (!isAdmin && !profile?.vendor_id) {
     return (
       <AppLayout>
         <div>
@@ -71,6 +135,39 @@ const NewTicket = () => {
                 <Label htmlFor="title">Title *</Label>
                 <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Brief summary of the issue" required />
               </div>
+
+              {isAdmin && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Vendor *</Label>
+                    <Select value={selectedVendorId} onValueChange={setSelectedVendorId}>
+                      <SelectTrigger><SelectValue placeholder="Select vendor" /></SelectTrigger>
+                      <SelectContent>
+                        {vendors.map((v) => (
+                          <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Assign To</Label>
+                    <Select value={assignedTo} onValueChange={setAssignedTo} disabled={!selectedVendorId}>
+                      <SelectTrigger><SelectValue placeholder={selectedVendorId ? "Select user" : "Select vendor first"} /></SelectTrigger>
+                      <SelectContent>
+                        {vendorUsers.map((u) => (
+                          <SelectItem key={u.user_id} value={u.user_id}>
+                            {u.full_name || u.email || "Unknown"}
+                          </SelectItem>
+                        ))}
+                        {vendorUsers.length === 0 && selectedVendorId && (
+                          <SelectItem value="__none" disabled>No active users</SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Issue Type</Label>
@@ -97,10 +194,12 @@ const NewTicket = () => {
                   </Select>
                 </div>
               </div>
+
               <div className="space-y-2">
                 <Label htmlFor="description">Description</Label>
                 <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Provide details about the issue…" rows={5} />
               </div>
+
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Creating…" : "Create Ticket"}
               </Button>
