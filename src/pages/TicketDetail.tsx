@@ -69,7 +69,24 @@ const TicketDetail = () => {
     return () => { supabase.removeChannel(channel); };
   }, [id]);
 
-  useEffect(() => { if (role === "admin") fetchAdminUsers(); }, [role]);
+  useEffect(() => {
+    if (role === "admin") fetchVendors();
+  }, [role]);
+
+  useEffect(() => {
+    if (role === "admin" && ticket?.vendor_id) fetchVendorUsers(ticket.vendor_id);
+  }, [role, ticket?.vendor_id]);
+
+  const handleVendorChange = async (newVendorId: string) => {
+    if (!id) return;
+    const { error } = await supabase.from("tickets").update({ vendor_id: newVendorId, assigned_to: null }).eq("id", id);
+    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
+    else {
+      setTicket(prev => prev ? { ...prev, vendor_id: newVendorId, assigned_to: null } : prev);
+      toast({ title: "Vendor updated" });
+      fetchVendorUsers(newVendorId);
+    }
+  };
 
   const updateTicket = async (field: string, value: string | null) => {
     if (!id) return;
