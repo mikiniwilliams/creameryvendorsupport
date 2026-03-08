@@ -20,7 +20,8 @@ interface Ticket {
   assigned_to: string | null; created_at: string; updated_at: string;
 }
 interface Comment { id: string; content: string; user_id: string; created_at: string; }
-interface AdminUser { user_id: string; full_name: string | null; email: string | null; }
+interface ProfileUser { user_id: string; full_name: string | null; email: string | null; }
+interface Vendor { id: string; name: string; }
 
 const TicketDetail = () => {
   const { id } = useParams<{ id: string }>();
