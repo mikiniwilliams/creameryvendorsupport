@@ -66,7 +66,7 @@ const TicketLookup = ({ onBack }: { onBack: () => void }) => {
       return;
     }
 
-    setResult(data as TicketResult | null);
+    setResult(data as unknown as TicketResult | null);
     setLoading(false);
   };
 
