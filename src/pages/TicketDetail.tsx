@@ -57,11 +57,10 @@ const TicketDetail = () => {
 
   const fetchData = async () => {
     if (!id) return;
-    const queries: Promise<any>[] = [
+    const [ticketRes, commentsRes] = await Promise.all([
       supabase.from("tickets").select("*").eq("id", id).single(),
       supabase.from("comments").select("*").eq("ticket_id", id).order("created_at", { ascending: true }),
-    ];
-    const [ticketRes, commentsRes] = await Promise.all(queries);
+    ]);
     if (ticketRes.data) setTicket(ticketRes.data as Ticket);
     if (commentsRes.data) setComments(commentsRes.data as Comment[]);
     setLoading(false);
