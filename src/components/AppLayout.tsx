@@ -15,7 +15,15 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const { role, profile, signOut } = useAuth();
   const location = useLocation();
   const isMobile = useIsMobile();
+  const [copied, setCopied] = useState(false);
   const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + "/");
+  const publicFormUrl = `${window.location.origin}/submit-request`;
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(publicFormUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const navClass = (path: string) =>
     `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
