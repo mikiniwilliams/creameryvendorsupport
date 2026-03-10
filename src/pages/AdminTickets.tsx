@@ -206,6 +206,13 @@ const AdminTickets = () => {
                         <td className="py-3 pr-4">
                           <Link to={`/tickets/${t.id}`} className="text-primary hover:underline font-medium">{t.title}</Link>
                         </td>
+                        <td className="py-3 pr-4">
+                          {t.source === "public_form" ? (
+                            <Badge variant="outline" className="text-[10px] bg-amber-50 text-amber-700 border-amber-200">Public Form</Badge>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">Internal</span>
+                          )}
+                        </td>
                         <td className="py-3 pr-4 text-muted-foreground">{getVendorName(t.vendor_id)}</td>
                         <td className="py-3 pr-4"><Badge variant="outline" className="text-xs capitalize">{t.issue_type}</Badge></td>
                         <td className="py-3 pr-4"><Badge variant="outline" className={`status-badge-${t.status} text-xs capitalize`}>{formatStatus(t.status)}</Badge></td>
