@@ -69,6 +69,24 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
             <Link to="/users" className={navClass("/users")}>
               <Users className="h-4 w-4" /> Users
             </Link>
+
+            <div className="pt-3 px-1">
+              <div className="rounded-lg border border-sidebar-border bg-sidebar-accent/30 p-2.5 space-y-2">
+                <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-sidebar-foreground/50 font-semibold">
+                  <LinkIcon className="h-3 w-3" /> Public Form URL
+                </div>
+                <div className="flex gap-1">
+                  <Input
+                    readOnly
+                    value={publicFormUrl}
+                    className="h-7 text-[10px] bg-sidebar-background border-sidebar-border text-sidebar-foreground/70 px-2"
+                  />
+                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0 shrink-0" onClick={handleCopyLink}>
+                    {copied ? <Check className="h-3 w-3 text-primary" /> : <Copy className="h-3 w-3" />}
+                  </Button>
+                </div>
+              </div>
+            </div>
           </>
         )}
 
