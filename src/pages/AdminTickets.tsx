@@ -18,6 +18,7 @@ interface TicketRow {
   vendor_id: string;
   assigned_to: string | null;
   created_at: string;
+  source?: string;
 }
 
 interface Vendor { id: string; name: string; }

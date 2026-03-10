@@ -19,6 +19,7 @@ import Notifications from "./pages/Notifications";
 import AdminApprovals from "./pages/AdminApprovals";
 import AdminTickets from "./pages/AdminTickets";
 import TicketTemplates from "./pages/TicketTemplates";
+import SubmitRequest from "./pages/SubmitRequest";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -39,8 +40,11 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Routes>
+            {/* Public routes - no auth required */}
+            <Route path="/submit-request" element={<SubmitRequest />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/onboarding" element={<Onboarding />} />
+            {/* Protected routes */}
             <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
             <Route path="/tickets/new" element={<ProtectedRoute><AdminOnlyNewTicket /></ProtectedRoute>} />
             <Route path="/tickets/:id" element={<ProtectedRoute><TicketDetail /></ProtectedRoute>} />
