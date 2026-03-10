@@ -387,6 +387,10 @@ export type Database = {
         Returns: boolean
       }
       is_active_user: { Args: { _user_id: string }; Returns: boolean }
+      lookup_public_ticket: {
+        Args: { _customer_email: string; _reference: string }
+        Returns: Json
+      }
       submit_public_ticket: {
         Args: {
           _customer_email: string
