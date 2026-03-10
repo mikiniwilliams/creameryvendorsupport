@@ -190,6 +190,7 @@ const AdminTickets = () => {
                   <thead>
                     <tr className="border-b text-left">
                       <th className="pb-3 font-medium text-muted-foreground">Title</th>
+                      <th className="pb-3 font-medium text-muted-foreground">Source</th>
                       <th className="pb-3 font-medium text-muted-foreground">Vendor</th>
                       <th className="pb-3 font-medium text-muted-foreground">Type</th>
                       <th className="pb-3 font-medium text-muted-foreground">Status</th>
