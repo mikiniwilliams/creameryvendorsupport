@@ -4,10 +4,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import NotificationBell from "@/components/NotificationBell";
 import {
   LayoutDashboard, Building2, Users, Bell, LogOut,
-  CheckCircle, Ticket, BookOpen, FileText, Plus
+  CheckCircle, Ticket, BookOpen, FileText, Plus, LinkIcon, Copy, Check
 } from "lucide-react";
 
 const AppLayout = ({ children }: { children: React.ReactNode }) => {
