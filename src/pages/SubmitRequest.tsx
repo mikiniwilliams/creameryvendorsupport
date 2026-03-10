@@ -16,7 +16,8 @@ const issueTypes = [
   "Product Issue",
   "Non-Delivery",
   "Billing Dispute",
-  "Rude/Unprofessional Behavior",
+  "Wrong Item Received",
+  "Rude or Unprofessional Behavior",
   "Other",
 ];
 
