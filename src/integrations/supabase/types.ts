@@ -266,10 +266,13 @@ export type Database = {
           assigned_to: string | null
           created_at: string
           created_by: string
+          customer_email: string | null
+          customer_name: string | null
           description: string | null
           id: string
           issue_type: string
           priority: string
+          source: string | null
           status: string
           title: string
           updated_at: string
@@ -279,10 +282,13 @@ export type Database = {
           assigned_to?: string | null
           created_at?: string
           created_by: string
+          customer_email?: string | null
+          customer_name?: string | null
           description?: string | null
           id?: string
           issue_type?: string
           priority?: string
+          source?: string | null
           status?: string
           title: string
           updated_at?: string
@@ -292,10 +298,13 @@ export type Database = {
           assigned_to?: string | null
           created_at?: string
           created_by?: string
+          customer_email?: string | null
+          customer_name?: string | null
           description?: string | null
           id?: string
           issue_type?: string
           priority?: string
+          source?: string | null
           status?: string
           title?: string
           updated_at?: string
@@ -378,6 +387,18 @@ export type Database = {
         Returns: boolean
       }
       is_active_user: { Args: { _user_id: string }; Returns: boolean }
+      submit_public_ticket: {
+        Args: {
+          _customer_email: string
+          _customer_name: string
+          _description: string
+          _issue_type: string
+          _resolution_request?: string
+          _transaction_date?: string
+          _vendor_name: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       app_role: "admin" | "vendor"
