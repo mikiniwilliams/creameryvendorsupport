@@ -18,6 +18,7 @@ interface TicketRow {
   vendor_id: string;
   assigned_to: string | null;
   created_at: string;
+  source?: string;
 }
 
 interface Vendor { id: string; name: string; }
@@ -189,6 +190,7 @@ const AdminTickets = () => {
                   <thead>
                     <tr className="border-b text-left">
                       <th className="pb-3 font-medium text-muted-foreground">Title</th>
+                      <th className="pb-3 font-medium text-muted-foreground">Source</th>
                       <th className="pb-3 font-medium text-muted-foreground">Vendor</th>
                       <th className="pb-3 font-medium text-muted-foreground">Type</th>
                       <th className="pb-3 font-medium text-muted-foreground">Status</th>
@@ -203,6 +205,13 @@ const AdminTickets = () => {
                       <tr key={t.id} className="border-b last:border-0 hover:bg-muted/50">
                         <td className="py-3 pr-4">
                           <Link to={`/tickets/${t.id}`} className="text-primary hover:underline font-medium">{t.title}</Link>
+                        </td>
+                        <td className="py-3 pr-4">
+                          {t.source === "public_form" ? (
+                            <Badge variant="outline" className="text-[10px] bg-amber-50 text-amber-700 border-amber-200">Public Form</Badge>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">Internal</span>
+                          )}
                         </td>
                         <td className="py-3 pr-4 text-muted-foreground">{getVendorName(t.vendor_id)}</td>
                         <td className="py-3 pr-4"><Badge variant="outline" className="text-xs capitalize">{t.issue_type}</Badge></td>
