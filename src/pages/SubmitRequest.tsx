@@ -10,7 +10,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { Ticket, CalendarIcon, CheckCircle2 } from "lucide-react";
+import { Ticket, CalendarIcon, CheckCircle2, Search } from "lucide-react";
+import TicketLookup from "@/components/public-form/TicketLookup";
 
 const issueTypes = [
   "Product Issue",
@@ -22,7 +23,7 @@ const issueTypes = [
 ];
 
 const SubmitRequest = () => {
-  const [submitted, setSubmitted] = useState(false);
+  const [view, setView] = useState<"form" | "success" | "lookup">("form");
   const [ticketRef, setTicketRef] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -34,6 +35,12 @@ const SubmitRequest = () => {
   const [issueType, setIssueType] = useState("");
   const [description, setDescription] = useState("");
   const [resolution, setResolution] = useState("");
+
+  const resetForm = () => {
+    setName(""); setEmail(""); setTransactionDate(undefined);
+    setVendorName(""); setIssueType(""); setDescription(""); setResolution("");
+    setView("form");
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,31 +79,37 @@ const SubmitRequest = () => {
 
     const refId = typeof data === "string" ? data.slice(-6).toUpperCase() : "XXXXXX";
     setTicketRef(refId);
-    setSubmitted(true);
+    setView("success");
     setLoading(false);
   };
 
-  if (submitted) {
+  if (view === "lookup") {
+    return <TicketLookup onBack={() => setView("form")} />;
+  }
+
+  if (view === "success") {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background p-4">
         <Card className="w-full max-w-[640px] animate-fade-in">
           <CardContent className="py-16 text-center space-y-4">
-            <CheckCircle2 className="h-16 w-16 text-primary mx-auto" />
+            <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto" />
             <h2 className="text-2xl font-bold">Your request has been submitted!</h2>
             <p className="text-muted-foreground">
               Reference #{ticketRef}
             </p>
             <p className="text-sm text-muted-foreground max-w-md mx-auto">
-              Our admin team will review it and follow up within 1 business day.
+              Our admin team will review your request and follow up within 1 business day.
               You do not need to create an account.
             </p>
-            <Button variant="outline" className="mt-4" onClick={() => {
-              setSubmitted(false);
-              setName(""); setEmail(""); setTransactionDate(undefined);
-              setVendorName(""); setIssueType(""); setDescription(""); setResolution("");
-            }}>
-              Submit Another Request
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-2 justify-center pt-2">
+              <Button variant="outline" onClick={resetForm}>
+                Submit Another Request
+              </Button>
+              <Button variant="ghost" onClick={() => setView("lookup")}>
+                <Search className="h-4 w-4 mr-2" />
+                Check Request Status
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -208,9 +221,12 @@ const SubmitRequest = () => {
               {loading ? "Submitting…" : "Submit Support Request"}
             </Button>
 
-            <p className="text-xs text-center text-muted-foreground">
-              Your email is used for follow-up only and is not shared publicly.
-            </p>
+            <div className="text-center pt-1">
+              <Button type="button" variant="link" className="text-xs text-muted-foreground" onClick={() => setView("lookup")}>
+                <Search className="h-3 w-3 mr-1" />
+                Already submitted? Check your request status
+              </Button>
+            </div>
           </form>
         </CardContent>
       </Card>
