@@ -4,8 +4,30 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Ticket, Building2, Users, CheckCircle, AlertTriangle, Clock } from "lucide-react";
+import { Ticket, Building2, CheckCircle, AlertTriangle, Clock, Flame } from "lucide-react";
 import DashboardAnalytics from "./DashboardAnalytics";
+
+const getTicketAge = (createdAt: string, status: string) => {
+  if (status === "resolved" || status === "closed") return null;
+  const hours = (Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60);
+  if (hours >= 73) return "overdue";
+  if (hours >= 25) return "aging";
+  return null;
+};
+
+const TicketAgeIndicator = ({ age }: { age: string | null }) => {
+  if (!age) return null;
+  if (age === "overdue") return (
+    <span className="inline-flex items-center gap-1 text-xs text-red-600">
+      <Flame className="h-3 w-3" /> Overdue
+    </span>
+  );
+  return (
+    <span className="inline-flex items-center gap-1 text-xs text-amber-600">
+      <Clock className="h-3 w-3" /> Aging
+    </span>
+  );
+};
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState({ totalTickets: 0, openTickets: 0, pendingVendors: 0, pendingUsers: 0, activeVendors: 0 });
@@ -26,7 +48,7 @@ const AdminDashboard = () => {
       setAllTickets(tickets);
       setStats({
         totalTickets: tickets.length,
-        openTickets: tickets.filter((t: any) => t.status === "open" || t.status === "in_progress").length,
+        openTickets: tickets.filter((t: any) => ["open", "in_progress", "pending_vendor_response"].includes(t.status)).length,
         pendingVendors: vendors.filter(v => v.status === "pending").length,
         pendingUsers: profiles.filter(p => p.status === "pending").length,
         activeVendors: vendors.filter(v => v.status === "active").length,
@@ -36,6 +58,8 @@ const AdminDashboard = () => {
     };
     fetchData();
   }, []);
+
+  const formatStatus = (s: string) => s.replace(/_/g, " ");
 
   if (loading) return <div className="flex justify-center py-20"><div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" /></div>;
 
@@ -63,7 +87,7 @@ const AdminDashboard = () => {
         </CardContent></Card>
         <Card><CardContent className="flex items-center gap-4 p-5">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50"><Clock className="h-5 w-5 text-blue-600" /></div>
-          <div><p className="text-2xl font-bold">{stats.openTickets}</p><p className="text-xs text-muted-foreground">Open / In Progress</p></div>
+          <div><p className="text-2xl font-bold">{stats.openTickets}</p><p className="text-xs text-muted-foreground">Open / Active</p></div>
         </CardContent></Card>
         <Card><CardContent className="flex items-center gap-4 p-5">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50"><Building2 className="h-5 w-5 text-emerald-600" /></div>
@@ -91,8 +115,9 @@ const AdminDashboard = () => {
                     <p className="text-sm font-medium truncate">{t.title}</p>
                     <p className="text-xs text-muted-foreground">{t.issue_type || "general"} · {new Date(t.created_at).toLocaleDateString()}</p>
                   </div>
-                  <div className="flex gap-2 ml-4">
-                    <Badge variant="outline" className={`status-badge-${t.status} text-xs`}>{t.status.replace("_", " ")}</Badge>
+                  <div className="flex items-center gap-2 ml-4">
+                    <TicketAgeIndicator age={getTicketAge(t.created_at, t.status)} />
+                    <Badge variant="outline" className={`status-badge-${t.status} text-xs capitalize`}>{formatStatus(t.status)}</Badge>
                     <Badge variant="outline" className={`priority-badge-${t.priority} text-xs`}>{t.priority}</Badge>
                   </div>
                 </Link>
