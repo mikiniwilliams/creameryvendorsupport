@@ -32,7 +32,7 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
         <span className="font-semibold text-sidebar-foreground text-sm">VendorCare</span>
       </div>
 
-      <nav className="flex-1 space-y-1 px-3 py-4">
+      <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
         <Link to="/" className={navClass("/")} >
           <LayoutDashboard className="h-4 w-4" /> Dashboard
         </Link>
