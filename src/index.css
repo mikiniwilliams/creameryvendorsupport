@@ -127,7 +127,8 @@
   .status-badge-active { @apply bg-emerald-50 text-emerald-700 border border-emerald-200; }
   .status-badge-disabled { @apply bg-red-50 text-red-700 border border-red-200; }
   .status-badge-open { @apply bg-blue-50 text-blue-700 border border-blue-200; }
-  .status-badge-in_progress { @apply bg-indigo-50 text-indigo-700 border border-indigo-200; }
+  .status-badge-in_progress { @apply bg-amber-50 text-amber-700 border border-amber-200; }
+  .status-badge-pending_vendor_response { @apply bg-purple-50 text-purple-700 border border-purple-200; }
   .status-badge-resolved { @apply bg-emerald-50 text-emerald-700 border border-emerald-200; }
   .status-badge-closed { @apply bg-slate-100 text-slate-600 border border-slate-200; }
   .priority-badge-low { @apply bg-slate-50 text-slate-600 border border-slate-200; }

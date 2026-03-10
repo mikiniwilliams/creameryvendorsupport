@@ -4,19 +4,17 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import NotificationBell from "@/components/NotificationBell";
 import {
-  LayoutDashboard, Plus, Building2, Users, Bell, LogOut,
-  CheckCircle, Ticket, BookOpen, Menu, FileText
+  LayoutDashboard, Building2, Users, Bell, LogOut,
+  CheckCircle, Ticket, BookOpen, FileText, Plus
 } from "lucide-react";
 
 const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const { role, profile, signOut } = useAuth();
   const location = useLocation();
   const isMobile = useIsMobile();
-  const [open, setOpen] = useState(false);
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + "/");
 
   const navClass = (path: string) =>
     `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
@@ -35,37 +33,31 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
       </div>
 
       <nav className="flex-1 space-y-1 px-3 py-4">
-        <Link to="/" className={navClass("/")} onClick={() => setOpen(false)}>
+        <Link to="/" className={navClass("/")} >
           <LayoutDashboard className="h-4 w-4" /> Dashboard
         </Link>
-
-        {role === "vendor" && (
-          <Link to="/tickets/new" className={navClass("/tickets/new")} onClick={() => setOpen(false)}>
-            <Plus className="h-4 w-4" /> New Ticket
-          </Link>
-        )}
 
         {role === "admin" && (
           <>
             <div className="pt-4 pb-1 px-3">
               <p className="text-[10px] uppercase tracking-wider text-sidebar-foreground/40 font-semibold">Admin</p>
             </div>
-            <Link to="/tickets/new" className={navClass("/tickets/new")} onClick={() => setOpen(false)}>
+            <Link to="/tickets/new" className={navClass("/tickets/new")}>
               <Plus className="h-4 w-4" /> Create Ticket
             </Link>
-            <Link to="/admin/approvals" className={navClass("/admin/approvals")} onClick={() => setOpen(false)}>
+            <Link to="/admin/approvals" className={navClass("/admin/approvals")}>
               <CheckCircle className="h-4 w-4" /> Approvals
             </Link>
-            <Link to="/admin/tickets" className={navClass("/admin/tickets")} onClick={() => setOpen(false)}>
+            <Link to="/admin/tickets" className={navClass("/admin/tickets")}>
               <Ticket className="h-4 w-4" /> All Tickets
             </Link>
-            <Link to="/admin/templates" className={navClass("/admin/templates")} onClick={() => setOpen(false)}>
+            <Link to="/admin/templates" className={navClass("/admin/templates")}>
               <FileText className="h-4 w-4" /> Templates
             </Link>
-            <Link to="/vendors" className={navClass("/vendors")} onClick={() => setOpen(false)}>
+            <Link to="/vendors" className={navClass("/vendors")}>
               <Building2 className="h-4 w-4" /> Vendors
             </Link>
-            <Link to="/users" className={navClass("/users")} onClick={() => setOpen(false)}>
+            <Link to="/users" className={navClass("/users")}>
               <Users className="h-4 w-4" /> Users
             </Link>
           </>
@@ -74,10 +66,10 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
         <div className="pt-4 pb-1 px-3">
           <p className="text-[10px] uppercase tracking-wider text-sidebar-foreground/40 font-semibold">Other</p>
         </div>
-        <Link to="/notifications" className={navClass("/notifications")} onClick={() => setOpen(false)}>
+        <Link to="/notifications" className={navClass("/notifications")}>
           <Bell className="h-4 w-4" /> Notifications
         </Link>
-        <Link to="/knowledge-base" className={navClass("/knowledge-base")} onClick={() => setOpen(false)}>
+        <Link to="/knowledge-base" className={navClass("/knowledge-base")}>
           <BookOpen className="h-4 w-4" /> Knowledge Base
         </Link>
       </nav>

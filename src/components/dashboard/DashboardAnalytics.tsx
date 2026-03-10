@@ -21,7 +21,14 @@ const COLORS = {
   destructive: "hsl(0, 72%, 51%)",
 };
 
-const PIE_COLORS = [COLORS.primary, COLORS.accent, COLORS.success, COLORS.muted];
+const STATUS_COLORS: Record<string, string> = {
+  open: "hsl(217, 91%, 60%)",
+  "in progress": "hsl(38, 92%, 50%)",
+  "pending vendor response": "hsl(271, 91%, 65%)",
+  resolved: "hsl(152, 60%, 40%)",
+  closed: "hsl(220, 10%, 70%)",
+};
+
 const PRIORITY_COLORS: Record<string, string> = {
   low: COLORS.muted,
   medium: COLORS.primary,
@@ -34,7 +41,6 @@ const DashboardAnalytics = ({ tickets }: { tickets: Ticket[] }) => {
     const end = startOfDay(new Date());
     const start = subDays(end, 13);
     const days = eachDayOfInterval({ start, end });
-
     return days.map((day) => {
       const dayStr = format(day, "yyyy-MM-dd");
       const count = tickets.filter(
@@ -47,7 +53,7 @@ const DashboardAnalytics = ({ tickets }: { tickets: Ticket[] }) => {
   const statusData = useMemo(() => {
     const counts: Record<string, number> = {};
     tickets.forEach((t) => {
-      const label = t.status.replace("_", " ");
+      const label = t.status.replace(/_/g, " ");
       counts[label] = (counts[label] || 0) + 1;
     });
     return Object.entries(counts).map(([name, value]) => ({ name, value }));
@@ -69,7 +75,6 @@ const DashboardAnalytics = ({ tickets }: { tickets: Ticket[] }) => {
 
   return (
     <div className="grid gap-4 lg:grid-cols-2">
-      {/* Ticket Trend */}
       <Card className="lg:col-span-2">
         <CardHeader><CardTitle className="text-lg">Tickets Over Time (14 days)</CardTitle></CardHeader>
         <CardContent>
@@ -84,27 +89,13 @@ const DashboardAnalytics = ({ tickets }: { tickets: Ticket[] }) => {
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 15%, 90%)" />
               <XAxis dataKey="date" tick={{ fontSize: 12 }} stroke="hsl(220, 10%, 50%)" />
               <YAxis allowDecimals={false} tick={{ fontSize: 12 }} stroke="hsl(220, 10%, 50%)" />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "hsl(0, 0%, 100%)",
-                  border: "1px solid hsl(220, 15%, 90%)",
-                  borderRadius: "8px",
-                  fontSize: 13,
-                }}
-              />
-              <Area
-                type="monotone"
-                dataKey="tickets"
-                stroke={COLORS.primary}
-                strokeWidth={2}
-                fill="url(#ticketGradient)"
-              />
+              <Tooltip contentStyle={{ backgroundColor: "hsl(0, 0%, 100%)", border: "1px solid hsl(220, 15%, 90%)", borderRadius: "8px", fontSize: 13 }} />
+              <Area type="monotone" dataKey="tickets" stroke={COLORS.primary} strokeWidth={2} fill="url(#ticketGradient)" />
             </AreaChart>
           </ResponsiveContainer>
         </CardContent>
       </Card>
 
-      {/* Status Distribution */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -118,33 +109,18 @@ const DashboardAnalytics = ({ tickets }: { tickets: Ticket[] }) => {
         <CardContent>
           <ResponsiveContainer width="100%" height={200}>
             <PieChart>
-              <Pie
-                data={statusData}
-                cx="50%"
-                cy="50%"
-                innerRadius={50}
-                outerRadius={80}
-                paddingAngle={3}
-                dataKey="value"
-              >
-                {statusData.map((_, i) => (
-                  <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+              <Pie data={statusData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={3} dataKey="value">
+                {statusData.map((entry) => (
+                  <Cell key={entry.name} fill={STATUS_COLORS[entry.name] || COLORS.muted} />
                 ))}
               </Pie>
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "hsl(0, 0%, 100%)",
-                  border: "1px solid hsl(220, 15%, 90%)",
-                  borderRadius: "8px",
-                  fontSize: 13,
-                }}
-              />
+              <Tooltip contentStyle={{ backgroundColor: "hsl(0, 0%, 100%)", border: "1px solid hsl(220, 15%, 90%)", borderRadius: "8px", fontSize: 13 }} />
             </PieChart>
           </ResponsiveContainer>
           <div className="flex flex-wrap justify-center gap-3 mt-2">
-            {statusData.map((entry, i) => (
+            {statusData.map((entry) => (
               <div key={entry.name} className="flex items-center gap-1.5 text-xs">
-                <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
+                <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: STATUS_COLORS[entry.name] || COLORS.muted }} />
                 <span className="text-muted-foreground capitalize">{entry.name} ({entry.value})</span>
               </div>
             ))}
@@ -152,7 +128,6 @@ const DashboardAnalytics = ({ tickets }: { tickets: Ticket[] }) => {
         </CardContent>
       </Card>
 
-      {/* Priority Breakdown */}
       <Card>
         <CardHeader><CardTitle className="text-lg">Tickets by Priority</CardTitle></CardHeader>
         <CardContent>
@@ -161,14 +136,7 @@ const DashboardAnalytics = ({ tickets }: { tickets: Ticket[] }) => {
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 15%, 90%)" vertical={false} />
               <XAxis dataKey="name" tick={{ fontSize: 12 }} stroke="hsl(220, 10%, 50%)" className="capitalize" />
               <YAxis allowDecimals={false} tick={{ fontSize: 12 }} stroke="hsl(220, 10%, 50%)" />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "hsl(0, 0%, 100%)",
-                  border: "1px solid hsl(220, 15%, 90%)",
-                  borderRadius: "8px",
-                  fontSize: 13,
-                }}
-              />
+              <Tooltip contentStyle={{ backgroundColor: "hsl(0, 0%, 100%)", border: "1px solid hsl(220, 15%, 90%)", borderRadius: "8px", fontSize: 13 }} />
               <Bar dataKey="value" radius={[6, 6, 0, 0]}>
                 {priorityData.map((entry) => (
                   <Cell key={entry.name} fill={PRIORITY_COLORS[entry.name] || COLORS.muted} />

@@ -8,11 +8,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Send, UserCheck, History, Pencil, Trash2, Check, X } from "lucide-react";
+import { ArrowLeft, Send, UserCheck, History, Pencil, Trash2, Check, X, Lock } from "lucide-react";
 import ActivityTimeline from "@/components/ActivityTimeline";
-import { Label } from "@/components/ui/label";
 
 interface Ticket {
   id: string; title: string; description: string | null; status: string;
@@ -20,8 +20,22 @@ interface Ticket {
   assigned_to: string | null; created_at: string; updated_at: string;
 }
 interface Comment { id: string; content: string; user_id: string; created_at: string; }
+interface InternalNote { id: string; content: string; user_id: string; created_at: string; }
 interface ProfileUser { user_id: string; full_name: string | null; email: string | null; }
 interface Vendor { id: string; name: string; }
+
+const ADMIN_STATUSES = [
+  { value: "open", label: "Open" },
+  { value: "in_progress", label: "In Progress" },
+  { value: "pending_vendor_response", label: "Pending Vendor Response" },
+  { value: "resolved", label: "Resolved" },
+  { value: "closed", label: "Closed" },
+];
+
+const VENDOR_STATUSES = [
+  { value: "in_progress", label: "In Progress" },
+  { value: "resolved", label: "Resolved" },
+];
 
 const TicketDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -30,13 +44,16 @@ const TicketDetail = () => {
   const { toast } = useToast();
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
+  const [internalNotes, setInternalNotes] = useState<InternalNote[]>([]);
   const [vendorUsers, setVendorUsers] = useState<ProfileUser[]>([]);
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [newComment, setNewComment] = useState("");
+  const [newNote, setNewNote] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState("");
+  const [activeTab, setActiveTab] = useState("public");
 
   const fetchData = async () => {
     if (!id) return;
@@ -47,6 +64,12 @@ const TicketDetail = () => {
     if (ticketRes.data) setTicket(ticketRes.data as Ticket);
     if (commentsRes.data) setComments(commentsRes.data as Comment[]);
     setLoading(false);
+  };
+
+  const fetchInternalNotes = async () => {
+    if (!id || role !== "admin") return;
+    const { data } = await supabase.from("internal_notes").select("*").eq("ticket_id", id).order("created_at", { ascending: true });
+    if (data) setInternalNotes(data as InternalNote[]);
   };
 
   const fetchVendorUsers = async (vendorId: string) => {
@@ -70,8 +93,8 @@ const TicketDetail = () => {
   }, [id]);
 
   useEffect(() => {
-    if (role === "admin") fetchVendors();
-  }, [role]);
+    if (role === "admin") { fetchVendors(); fetchInternalNotes(); }
+  }, [role, id]);
 
   useEffect(() => {
     if (role === "admin" && ticket?.vendor_id) fetchVendorUsers(ticket.vendor_id);
@@ -105,6 +128,15 @@ const TicketDetail = () => {
     setSubmitting(false);
   };
 
+  const addInternalNote = async () => {
+    if (!id || !user || !newNote.trim()) return;
+    setSubmitting(true);
+    const { error } = await supabase.from("internal_notes").insert({ ticket_id: id, user_id: user.id, content: newNote.trim() });
+    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
+    else { setNewNote(""); fetchInternalNotes(); }
+    setSubmitting(false);
+  };
+
   const updateComment = async (commentId: string) => {
     if (!editContent.trim()) return;
     const { error } = await supabase.from("comments").update({ content: editContent.trim() }).eq("id", commentId);
@@ -117,6 +149,14 @@ const TicketDetail = () => {
     if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
     else fetchData();
   };
+
+  const deleteNote = async (noteId: string) => {
+    const { error } = await supabase.from("internal_notes").delete().eq("id", noteId);
+    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
+    else fetchInternalNotes();
+  };
+
+  const formatStatus = (s: string) => s.replace(/_/g, " ");
 
   if (loading) return <AppLayout><div className="flex justify-center py-20"><div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" /></div></AppLayout>;
   if (!ticket) return <AppLayout><div className="text-center py-20"><p className="text-muted-foreground">Ticket not found.</p><Button variant="ghost" onClick={() => navigate("/")} className="mt-4">Go back</Button></div></AppLayout>;
@@ -134,7 +174,7 @@ const TicketDetail = () => {
                 <p className="text-sm text-muted-foreground mt-1">Created {new Date(ticket.created_at).toLocaleString()}</p>
               </div>
               <div className="flex flex-wrap gap-2">
-                <Badge variant="outline" className={`status-badge-${ticket.status}`}>{ticket.status.replace("_", " ")}</Badge>
+                <Badge variant="outline" className={`status-badge-${ticket.status} capitalize`}>{formatStatus(ticket.status)}</Badge>
                 <Badge variant="outline" className={`priority-badge-${ticket.priority}`}>{ticket.priority}</Badge>
                 <Badge variant="outline" className="capitalize">{ticket.issue_type}</Badge>
               </div>
@@ -153,12 +193,9 @@ const TicketDetail = () => {
                 <div className="space-y-1">
                   <label className="text-xs font-medium text-muted-foreground">Status</label>
                   <Select value={ticket.status} onValueChange={(v) => updateTicket("status", v)}>
-                    <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="open">Open</SelectItem>
-                      <SelectItem value="in_progress">In Progress</SelectItem>
-                      <SelectItem value="resolved">Resolved</SelectItem>
-                      <SelectItem value="closed">Closed</SelectItem>
+                      {ADMIN_STATUSES.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
@@ -201,13 +238,10 @@ const TicketDetail = () => {
               <div className="flex flex-wrap gap-4 border-t pt-4">
                 <div className="space-y-1">
                   <label className="text-xs font-medium text-muted-foreground">Update Status</label>
-                  <Select value={ticket.status} onValueChange={(v) => updateTicket("status", v)}>
-                    <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
+                  <Select value={VENDOR_STATUSES.some(s => s.value === ticket.status) ? ticket.status : ""} onValueChange={(v) => updateTicket("status", v)}>
+                    <SelectTrigger className="w-[160px]"><SelectValue placeholder="Select status" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="open">Open</SelectItem>
-                      <SelectItem value="in_progress">In Progress</SelectItem>
-                      <SelectItem value="resolved">Resolved</SelectItem>
-                      <SelectItem value="closed">Closed</SelectItem>
+                      {VENDOR_STATUSES.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
@@ -221,65 +255,130 @@ const TicketDetail = () => {
           <CardContent><ActivityTimeline ticketId={ticket.id} userRole={role} key={comments.length} /></CardContent>
         </Card>
 
+        {/* Comments / Internal Notes */}
         <Card>
-          <CardHeader><CardTitle className="text-lg">Comments ({comments.length})</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
-            {comments.length === 0 && <p className="text-sm text-muted-foreground">No comments yet.</p>}
-            {comments.map((c) => {
-              const isOwn = c.user_id === user?.id;
-              const canDelete = isOwn || role === "admin";
-              return (
-                <div key={c.id} className="rounded-lg border p-4 group">
-                  {editingId === c.id ? (
-                    <div className="space-y-2">
-                      <Textarea value={editContent} onChange={(e) => setEditContent(e.target.value)} rows={2} className="text-sm" />
-                      <div className="flex gap-2">
-                        <Button size="sm" onClick={() => updateComment(c.id)} disabled={!editContent.trim()} className="gap-1"><Check className="h-3 w-3" /> Save</Button>
-                        <Button size="sm" variant="ghost" onClick={() => { setEditingId(null); setEditContent(""); }} className="gap-1"><X className="h-3 w-3" /> Cancel</Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <>
+          {role === "admin" ? (
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <CardHeader>
+                <TabsList>
+                  <TabsTrigger value="public">Public Thread ({comments.length})</TabsTrigger>
+                  <TabsTrigger value="internal" className="gap-1.5">
+                    <Lock className="h-3 w-3" /> Internal Notes ({internalNotes.length})
+                  </TabsTrigger>
+                </TabsList>
+              </CardHeader>
+              <CardContent>
+                <TabsContent value="public" className="mt-0 space-y-4">
+                  {renderComments()}
+                  {renderCommentInput()}
+                </TabsContent>
+                <TabsContent value="internal" className="mt-0 space-y-4">
+                  <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2 flex items-center gap-1.5">
+                    <Lock className="h-3 w-3" /> Visible to admins only
+                  </p>
+                  {internalNotes.length === 0 && <p className="text-sm text-muted-foreground">No internal notes yet.</p>}
+                  {internalNotes.map(n => (
+                    <div key={n.id} className="rounded-lg border border-amber-200 bg-amber-50/50 p-4 group">
                       <div className="flex items-start justify-between gap-2">
-                        <p className="text-sm whitespace-pre-wrap flex-1">{c.content}</p>
-                        {(isOwn || canDelete) && (
-                          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                            {isOwn && (
-                              <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { setEditingId(c.id); setEditContent(c.content); }}>
-                                <Pencil className="h-3 w-3" />
-                              </Button>
-                            )}
-                            {canDelete && (
-                              <ConfirmDialog
-                                trigger={
-                                  <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive">
-                                    <Trash2 className="h-3 w-3" />
-                                  </Button>
-                                }
-                                title="Delete comment?"
-                                description="This comment will be permanently removed."
-                                confirmLabel="Delete"
-                                onConfirm={() => deleteComment(c.id)}
-                              />
-                            )}
-                          </div>
-                        )}
+                        <p className="text-sm whitespace-pre-wrap flex-1">{n.content}</p>
+                        <ConfirmDialog
+                          trigger={
+                            <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          }
+                          title="Delete note?"
+                          description="This internal note will be permanently removed."
+                          confirmLabel="Delete"
+                          onConfirm={() => deleteNote(n.id)}
+                        />
                       </div>
-                      <p className="text-xs text-muted-foreground mt-2">{new Date(c.created_at).toLocaleString()}</p>
-                    </>
-                  )}
-                </div>
-              );
-            })}
-            <div className="flex gap-2 pt-2">
-              <Textarea value={newComment} onChange={(e) => setNewComment(e.target.value)} placeholder="Add a comment…" rows={2} className="flex-1" />
-              <Button onClick={addComment} disabled={submitting || !newComment.trim()} size="icon" className="shrink-0 self-end"><Send className="h-4 w-4" /></Button>
-            </div>
-          </CardContent>
+                      <p className="text-xs text-muted-foreground mt-2">{new Date(n.created_at).toLocaleString()}</p>
+                    </div>
+                  ))}
+                  <div className="flex gap-2 pt-2">
+                    <Textarea value={newNote} onChange={(e) => setNewNote(e.target.value)} placeholder="Add an internal note…" rows={2} className="flex-1 border-amber-200 bg-amber-50/30" />
+                    <Button onClick={addInternalNote} disabled={submitting || !newNote.trim()} size="icon" className="shrink-0 self-end"><Send className="h-4 w-4" /></Button>
+                  </div>
+                </TabsContent>
+              </CardContent>
+            </Tabs>
+          ) : (
+            <>
+              <CardHeader><CardTitle className="text-lg">Comments ({comments.length})</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                {renderComments()}
+                {renderCommentInput()}
+              </CardContent>
+            </>
+          )}
         </Card>
       </div>
     </AppLayout>
   );
+
+  function renderComments() {
+    return (
+      <>
+        {comments.length === 0 && <p className="text-sm text-muted-foreground">No comments yet.</p>}
+        {comments.map((c) => {
+          const isOwn = c.user_id === user?.id;
+          const canDelete = isOwn || role === "admin";
+          return (
+            <div key={c.id} className="rounded-lg border p-4 group">
+              {editingId === c.id ? (
+                <div className="space-y-2">
+                  <Textarea value={editContent} onChange={(e) => setEditContent(e.target.value)} rows={2} className="text-sm" />
+                  <div className="flex gap-2">
+                    <Button size="sm" onClick={() => updateComment(c.id)} disabled={!editContent.trim()} className="gap-1"><Check className="h-3 w-3" /> Save</Button>
+                    <Button size="sm" variant="ghost" onClick={() => { setEditingId(null); setEditContent(""); }} className="gap-1"><X className="h-3 w-3" /> Cancel</Button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-sm whitespace-pre-wrap flex-1">{c.content}</p>
+                    {(isOwn || canDelete) && (
+                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                        {isOwn && (
+                          <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { setEditingId(c.id); setEditContent(c.content); }}>
+                            <Pencil className="h-3 w-3" />
+                          </Button>
+                        )}
+                        {canDelete && (
+                          <ConfirmDialog
+                            trigger={
+                              <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive">
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            }
+                            title="Delete comment?"
+                            description="This comment will be permanently removed."
+                            confirmLabel="Delete"
+                            onConfirm={() => deleteComment(c.id)}
+                          />
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">{new Date(c.created_at).toLocaleString()}</p>
+                </>
+              )}
+            </div>
+          );
+        })}
+      </>
+    );
+  }
+
+  function renderCommentInput() {
+    return (
+      <div className="flex gap-2 pt-2">
+        <Textarea value={newComment} onChange={(e) => setNewComment(e.target.value)} placeholder="Add a comment…" rows={2} className="flex-1" />
+        <Button onClick={addComment} disabled={submitting || !newComment.trim()} size="icon" className="shrink-0 self-end"><Send className="h-4 w-4" /></Button>
+      </div>
+    );
+  }
 };
 
 export default TicketDetail;

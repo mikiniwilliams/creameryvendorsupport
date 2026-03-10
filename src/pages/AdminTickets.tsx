@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Ticket, Search, Download } from "lucide-react";
+import { Ticket, Search, Download, Clock, Flame } from "lucide-react";
 
 interface TicketRow {
   id: string;
@@ -22,6 +22,28 @@ interface TicketRow {
 
 interface Vendor { id: string; name: string; }
 interface AdminUser { user_id: string; full_name: string | null; email: string | null; }
+
+const getTicketAge = (createdAt: string, status: string) => {
+  if (status === "resolved" || status === "closed") return null;
+  const hours = (Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60);
+  if (hours >= 73) return "overdue";
+  if (hours >= 25) return "aging";
+  return null;
+};
+
+const TicketAgeIndicator = ({ age }: { age: string | null }) => {
+  if (!age) return null;
+  if (age === "overdue") return (
+    <span className="inline-flex items-center gap-1 text-xs text-red-600">
+      <Flame className="h-3.5 w-3.5" /> Overdue
+    </span>
+  );
+  return (
+    <span className="inline-flex items-center gap-1 text-xs text-amber-600">
+      <Clock className="h-3.5 w-3.5" /> Aging
+    </span>
+  );
+};
 
 const AdminTickets = () => {
   const [tickets, setTickets] = useState<TicketRow[]>([]);
@@ -54,10 +76,10 @@ const AdminTickets = () => {
   }, []);
 
   const getVendorName = (id: string) => vendors.find(v => v.id === id)?.name || "Unknown";
-  const getAdminName = (id: string | null) => {
+  const getAssignedName = (id: string | null) => {
     if (!id) return "Unassigned";
     const a = admins.find(a => a.user_id === id);
-    return a?.full_name || a?.email || "Unknown";
+    return a?.full_name || a?.email || "Unassigned";
   };
 
   const filtered = tickets.filter(t => {
@@ -69,6 +91,8 @@ const AdminTickets = () => {
     return true;
   });
 
+  const formatStatus = (s: string) => s.replace(/_/g, " ");
+
   const exportCsv = () => {
     const headers = ["Title", "Vendor", "Type", "Status", "Priority", "Assigned To", "Created"];
     const escape = (v: string) => `"${v.replace(/"/g, '""')}"`;
@@ -78,7 +102,7 @@ const AdminTickets = () => {
       escape(t.issue_type),
       escape(t.status),
       escape(t.priority),
-      escape(getAdminName(t.assigned_to)),
+      escape(getAssignedName(t.assigned_to)),
       escape(new Date(t.created_at).toLocaleDateString()),
     ].join(","));
     const csv = [headers.join(","), ...rows].join("\n");
@@ -109,11 +133,12 @@ const AdminTickets = () => {
                 <Input placeholder="Search tickets…" value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
               </div>
               <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger className="w-[130px]"><SelectValue placeholder="Status" /></SelectTrigger>
+                <SelectTrigger className="w-[170px]"><SelectValue placeholder="Status" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Status</SelectItem>
                   <SelectItem value="open">Open</SelectItem>
                   <SelectItem value="in_progress">In Progress</SelectItem>
+                  <SelectItem value="pending_vendor_response">Pending Vendor</SelectItem>
                   <SelectItem value="resolved">Resolved</SelectItem>
                   <SelectItem value="closed">Closed</SelectItem>
                 </SelectContent>
@@ -169,6 +194,7 @@ const AdminTickets = () => {
                       <th className="pb-3 font-medium text-muted-foreground">Status</th>
                       <th className="pb-3 font-medium text-muted-foreground">Priority</th>
                       <th className="pb-3 font-medium text-muted-foreground">Assigned</th>
+                      <th className="pb-3 font-medium text-muted-foreground">Age</th>
                       <th className="pb-3 font-medium text-muted-foreground">Date</th>
                     </tr>
                   </thead>
@@ -180,9 +206,10 @@ const AdminTickets = () => {
                         </td>
                         <td className="py-3 pr-4 text-muted-foreground">{getVendorName(t.vendor_id)}</td>
                         <td className="py-3 pr-4"><Badge variant="outline" className="text-xs capitalize">{t.issue_type}</Badge></td>
-                        <td className="py-3 pr-4"><Badge variant="outline" className={`status-badge-${t.status} text-xs`}>{t.status.replace("_", " ")}</Badge></td>
+                        <td className="py-3 pr-4"><Badge variant="outline" className={`status-badge-${t.status} text-xs capitalize`}>{formatStatus(t.status)}</Badge></td>
                         <td className="py-3 pr-4"><Badge variant="outline" className={`priority-badge-${t.priority} text-xs`}>{t.priority}</Badge></td>
-                        <td className="py-3 pr-4 text-muted-foreground text-xs">{getAdminName(t.assigned_to)}</td>
+                        <td className="py-3 pr-4 text-muted-foreground text-xs">{getAssignedName(t.assigned_to)}</td>
+                        <td className="py-3 pr-4"><TicketAgeIndicator age={getTicketAge(t.created_at, t.status)} /></td>
                         <td className="py-3 text-muted-foreground text-xs">{new Date(t.created_at).toLocaleDateString()}</td>
                       </tr>
                     ))}
