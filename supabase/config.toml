@@ -2,3 +2,6 @@ project_id = "sozqvthgeuxnlwpncyyc"
 
 [functions.support-chat]
 verify_jwt = false
+
+[functions.process-email-queue]
+verify_jwt = true
