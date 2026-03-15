@@ -77,11 +77,11 @@ const Notifications = () => {
             <Bell className="h-6 w-6" /> Notifications
             {unreadCount > 0 && <Badge className="ml-1">{unreadCount}</Badge>}
           </h1>
-          {unreadCount > 0 && (
-            <Button variant="outline" size="sm" onClick={markAllRead} className="gap-2">
-              <CheckCheck className="h-4 w-4" /> Mark All Read
-            </Button>
-          )}
+           {unreadCount > 0 && (
+             <Button variant="ghost" size="sm" onClick={markAllRead} className="gap-2 font-medium" style={{ color: "#E8A020" }}>
+               <CheckCheck className="h-4 w-4" /> Mark All Read
+             </Button>
+           )}
         </div>
 
         <Card>
