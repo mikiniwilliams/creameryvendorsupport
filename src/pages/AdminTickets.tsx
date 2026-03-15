@@ -202,7 +202,7 @@ const AdminTickets = () => {
                   </thead>
                   <tbody>
                     {filtered.map(t => (
-                      <tr key={t.id} className="border-b last:border-0 hover:bg-muted/50">
+                      <tr key={t.id} className={`border-b last:border-0 hover:bg-muted/50 priority-left-${t.priority}`}>
                         <td className="py-3 pr-4">
                           <Link to={`/tickets/${t.id}`} className="text-primary hover:underline font-medium">{t.title}</Link>
                         </td>
