@@ -92,7 +92,10 @@ const AdminTickets = () => {
     if (filterPriority !== "all" && t.priority !== filterPriority) return false;
     if (filterVendor !== "all" && t.vendor_id !== filterVendor) return false;
     if (filterType !== "all" && t.issue_type !== filterType) return false;
-    if (search && !t.title.toLowerCase().includes(search.toLowerCase())) return false;
+    if (search) {
+      const q = search.toLowerCase().replace(/^#/, "");
+      if (!t.title.toLowerCase().includes(q) && !getShortId(t).toLowerCase().includes(q)) return false;
+    }
     return true;
   });
 
