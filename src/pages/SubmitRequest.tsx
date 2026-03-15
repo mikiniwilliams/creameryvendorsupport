@@ -47,6 +47,13 @@ const SubmitRequest = () => {
     e.preventDefault();
     setError("");
 
+    // Honeypot check — bots will fill this hidden field
+    if (honeypot) {
+      setView("success");
+      setTicketRef("000000");
+      return;
+    }
+
     if (!name.trim() || !email.trim() || !vendorName.trim() || !issueType || !description.trim()) {
       setError("Please fill in all required fields.");
       return;
