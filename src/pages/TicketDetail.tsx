@@ -244,8 +244,8 @@ const TicketDetail = () => {
   if (!ticket) return <AppLayout><div className="text-center py-20"><p className="text-muted-foreground">Ticket not found.</p><Button variant="ghost" onClick={() => navigate("/")} className="mt-4">Go back</Button></div></AppLayout>;
 
   // A6: Show customer context card for admin if description contains "Requested Resolution:"
-  const hasCustomerContext = ticket.description && ticket.description.includes("Requested Resolution:");
-  const showCustomerContextForAdmin = role === "admin" && hasCustomerContext;
+  const hasCustomerContext = !!(ticket.customer_name || (ticket.description && (ticket.description.includes("Requested Resolution:") || ticket.description.includes("customer_name"))));
+  const showCustomerContextForAdmin = role === "admin" && (hasCustomerContext || !!ticket.customer_name);
 
   return (
     <AppLayout>
