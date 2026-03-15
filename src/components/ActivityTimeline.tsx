@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { formatDistanceToNow } from "date-fns";
 import {
-  PlusCircle, ArrowRightLeft, AlertTriangle, UserCheck, MessageSquare,
+  PlusCircle, ArrowRightLeft, AlertTriangle, UserCheck, MessageSquare, Pencil,
 } from "lucide-react";
 
 interface Activity {
@@ -19,31 +19,49 @@ interface ProfileMap {
   [userId: string]: { full_name: string | null };
 }
 
-const activityConfig: Record<string, { icon: React.ReactNode; label: string; color: string }> = {
+// A7: Visual differentiation by activity type
+const activityConfig: Record<string, { icon: React.ReactNode; label: string; iconColor: string; borderColor: string }> = {
   created: {
     icon: <PlusCircle className="h-4 w-4" />,
     label: "created this ticket",
-    color: "text-success bg-success/10",
+    iconColor: "text-green-600 bg-green-100",
+    borderColor: "#1D9E75",
   },
   status_change: {
     icon: <ArrowRightLeft className="h-4 w-4" />,
     label: "changed status",
-    color: "text-primary bg-primary/10",
+    iconColor: "text-amber-600 bg-amber-100",
+    borderColor: "#E8A020",
   },
   priority_change: {
     icon: <AlertTriangle className="h-4 w-4" />,
     label: "changed priority",
-    color: "text-warning bg-warning/10",
+    iconColor: "text-blue-600 bg-blue-100",
+    borderColor: "#378ADD",
   },
   assignment_change: {
     icon: <UserCheck className="h-4 w-4" />,
     label: "changed assignment",
-    color: "text-accent bg-accent/10",
+    iconColor: "text-gray-500 bg-gray-100",
+    borderColor: "#d4d4d4",
   },
   comment: {
     icon: <MessageSquare className="h-4 w-4" />,
     label: "commented",
-    color: "text-muted-foreground bg-muted",
+    iconColor: "text-blue-600 bg-blue-100",
+    borderColor: "#378ADD",
+  },
+  title_updated: {
+    icon: <Pencil className="h-4 w-4" />,
+    label: "updated the ticket title",
+    iconColor: "text-gray-500 bg-gray-100",
+    borderColor: "#d4d4d4",
+  },
+  description_updated: {
+    icon: <Pencil className="h-4 w-4" />,
+    label: "updated the ticket description",
+    iconColor: "text-gray-500 bg-gray-100",
+    borderColor: "#d4d4d4",
   },
 };
 
@@ -69,8 +87,6 @@ const ActivityTimeline = ({ ticketId, userRole }: { ticketId: string; userRole?:
 
       if (data) {
         setActivities(data as Activity[]);
-
-        // Fetch unique user profiles
         const userIds = [...new Set(data.map((a) => a.user_id).filter(Boolean))] as string[];
         if (userIds.length > 0) {
           const { data: profileData } = await supabase
@@ -109,7 +125,6 @@ const ActivityTimeline = ({ ticketId, userRole }: { ticketId: string; userRole?:
 
   return (
     <div className="relative space-y-0">
-      {/* Timeline line */}
       <div className="absolute left-[17px] top-2 bottom-2 w-px bg-border" />
 
       {activities
@@ -117,22 +132,23 @@ const ActivityTimeline = ({ ticketId, userRole }: { ticketId: string; userRole?:
         .map((activity, index, filtered) => {
         const config = activityConfig[activity.activity_type] || activityConfig.comment;
         const isLast = index === filtered.length - 1;
+        const isAssignment = activity.activity_type === "assignment_change";
 
         return (
-          <div key={activity.id} className={`relative flex gap-4 ${isLast ? "" : "pb-5"}`}>
+          <div key={activity.id} className={`relative flex gap-4 ${isLast ? "" : "pb-5"}`}
+            style={{ borderLeft: `3px solid ${config.borderColor}`, marginLeft: -1, paddingLeft: 12 }}>
             {/* Icon */}
-            <div className={`relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${config.color}`}>
+            <div className={`relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${config.iconColor}`}>
               {config.icon}
             </div>
 
             {/* Content */}
-            <div className="min-w-0 flex-1 pt-1">
+            <div className={`min-w-0 flex-1 pt-1 ${isAssignment ? "text-[85%] text-muted-foreground" : ""}`}>
               <div className="flex flex-wrap items-baseline gap-1">
-                <span className="text-sm font-medium">{getUserName(activity.user_id)}</span>
-                <span className="text-sm text-muted-foreground">{config.label}</span>
+                <span className={`font-medium ${isAssignment ? "text-xs" : "text-sm"}`}>{getUserName(activity.user_id)}</span>
+                <span className={`text-muted-foreground ${isAssignment ? "text-xs" : "text-sm"}`}>{config.label}</span>
               </div>
 
-              {/* Value change details */}
               {activity.activity_type === "status_change" && (
                 <p className="text-xs text-muted-foreground mt-1">
                   <span className="line-through">{formatValue(activity.old_value)}</span>
@@ -156,6 +172,12 @@ const ActivityTimeline = ({ ticketId, userRole }: { ticketId: string; userRole?:
                       ? getUserName(activity.new_value)
                       : "Unassigned"}
                   </span>
+                </p>
+              )}
+              {(activity.activity_type === "title_updated" || activity.activity_type === "description_updated") && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  {activity.old_value && <><span className="line-through">{activity.old_value.length > 60 ? activity.old_value.slice(0, 60) + "…" : activity.old_value}</span>{" → "}</>}
+                  <span className="font-medium text-foreground">{activity.new_value && activity.new_value.length > 60 ? activity.new_value.slice(0, 60) + "…" : activity.new_value}</span>
                 </p>
               )}
               {activity.activity_type === "comment" && activity.new_value && (

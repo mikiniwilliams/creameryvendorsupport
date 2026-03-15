@@ -515,6 +515,15 @@ export type Database = {
         Returns: boolean
       }
       is_active_user: { Args: { _user_id: string }; Returns: boolean }
+      log_ticket_edit: {
+        Args: {
+          _activity_type: string
+          _new_value: string
+          _old_value: string
+          _ticket_id: string
+        }
+        Returns: undefined
+      }
       lookup_public_ticket: {
         Args: { _customer_email: string; _reference: string }
         Returns: Json
