@@ -238,7 +238,10 @@ const VendorDashboard = ({ onClosePreview }: VendorDashboardProps = {}) => {
                           <div className="w-[3px] shrink-0 rounded-l-lg" style={{ background: borderColor }} />
                           <div className="p-4 space-y-3 flex-1 min-w-0">
                             <div className="flex items-start justify-between gap-2">
-                              <h3 className="font-medium text-sm leading-tight group-hover:text-primary transition-colors line-clamp-2">{t.title}</h3>
+                              <div className="min-w-0">
+                                <h3 className="font-medium text-sm leading-tight group-hover:text-primary transition-colors line-clamp-2">{t.title}</h3>
+                                <p className="text-[10px] font-mono text-muted-foreground mt-0.5">#{(t as any).short_id || t.id.slice(-6).toUpperCase()}</p>
+                              </div>
                               <Badge variant="outline" className={`${priorityConfig[t.priority] || ""} text-[10px] capitalize shrink-0`}>{t.priority}</Badge>
                             </div>
                             {!previewTicket && t.description && <p className="text-xs text-muted-foreground line-clamp-2">{t.description}</p>}
