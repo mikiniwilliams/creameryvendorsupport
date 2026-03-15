@@ -16,7 +16,7 @@ interface Activity {
 }
 
 interface ProfileMap {
-  [userId: string]: { full_name: string | null };
+  [userId: string]: { full_name: string | null; email?: string | null };
 }
 
 // A7: Visual differentiation by activity type
