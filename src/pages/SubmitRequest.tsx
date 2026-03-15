@@ -41,6 +41,7 @@ const SubmitRequest = () => {
   const resetForm = () => {
     setName(""); setEmail(""); setTransactionDate(undefined);
     setVendorName(""); setIssueType(""); setDescription(""); setResolution("");
+    formLoadTime.current = Date.now();
     setView("form");
   };
 
