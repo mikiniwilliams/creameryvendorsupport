@@ -16,7 +16,7 @@ interface Activity {
 }
 
 interface ProfileMap {
-  [userId: string]: { full_name: string | null };
+  [userId: string]: { full_name: string | null; email?: string | null };
 }
 
 // A7: Visual differentiation by activity type
@@ -91,7 +91,7 @@ const ActivityTimeline = ({ ticketId, userRole }: { ticketId: string; userRole?:
         if (userIds.length > 0) {
           const { data: profileData } = await supabase
             .from("profiles")
-            .select("user_id, full_name")
+            .select("user_id, full_name, email")
             .in("user_id", userIds);
           if (profileData) {
             const map: ProfileMap = {};
@@ -108,7 +108,7 @@ const ActivityTimeline = ({ ticketId, userRole }: { ticketId: string; userRole?:
   const getUserName = (userId: string | null) => {
     if (!userId) return "System";
     const p = profiles[userId];
-    return p?.full_name || "User";
+    return p?.full_name || p?.email?.split("@")[0] || "Team Member";
   };
 
   if (loading) {
