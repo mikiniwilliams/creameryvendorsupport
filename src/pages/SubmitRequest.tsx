@@ -72,7 +72,15 @@ const SubmitRequest = () => {
     });
 
     if (rpcError) {
-      setError("Something went wrong. Please try again or contact us directly.");
+      if (rpcError.message?.includes("Too many submissions")) {
+        setError("You've submitted too many requests recently. Please wait an hour before trying again.");
+      } else if (rpcError.message?.includes("Name must be")) {
+        setError("Name must be between 2 and 100 characters.");
+      } else if (rpcError.message?.includes("Description must be")) {
+        setError("Description must be between 10 and 2000 characters.");
+      } else {
+        setError("Something went wrong. Please try again or contact us directly.");
+      }
       setLoading(false);
       return;
     }
