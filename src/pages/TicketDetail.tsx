@@ -14,7 +14,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Send, UserCheck, History, Pencil, Trash2, Check, X, Lock, Archive, AlertCircle } from "lucide-react";
+import { ArrowLeft, Send, UserCheck, History, Pencil, Trash2, Check, X, Lock, Archive, AlertCircle, Mail, User, Calendar, Info } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import ActivityTimeline from "@/components/ActivityTimeline";
 
 interface Ticket {
