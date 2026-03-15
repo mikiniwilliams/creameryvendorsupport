@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -36,10 +36,12 @@ const SubmitRequest = () => {
   const [description, setDescription] = useState("");
   const [resolution, setResolution] = useState("");
   const [honeypot, setHoneypot] = useState("");
+  const formLoadTime = useRef(Date.now());
 
   const resetForm = () => {
     setName(""); setEmail(""); setTransactionDate(undefined);
     setVendorName(""); setIssueType(""); setDescription(""); setResolution("");
+    formLoadTime.current = Date.now();
     setView("form");
   };
 
@@ -49,6 +51,13 @@ const SubmitRequest = () => {
 
     // Honeypot check — bots will fill this hidden field
     if (honeypot) {
+      setView("success");
+      setTicketRef("000000");
+      return;
+    }
+
+    // Timing check — reject submissions faster than 3 seconds (bot behavior)
+    if (Date.now() - formLoadTime.current < 3000) {
       setView("success");
       setTicketRef("000000");
       return;
