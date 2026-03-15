@@ -151,9 +151,9 @@ const TicketDetail = () => {
     const oldDesc = ticket?.description || "";
     const { error } = await supabase.from("tickets").update({ description: editDescValue.trim() }).eq("id", id);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
-    await supabase.from("ticket_activity").insert({
-      ticket_id: id, user_id: user?.id, activity_type: "description_updated",
-      old_value: oldDesc, new_value: editDescValue.trim()
+    await supabase.rpc("log_ticket_edit", {
+      _ticket_id: id, _activity_type: "description_updated",
+      _old_value: oldDesc, _new_value: editDescValue.trim()
     });
     setTicket(prev => prev ? { ...prev, description: editDescValue.trim() } : prev);
     setEditingDesc(false);
