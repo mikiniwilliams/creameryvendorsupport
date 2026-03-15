@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -20,8 +20,14 @@ interface Notification {
 const NotificationBell = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
+
+  // Close popover on route change (fix #14 z-index overlap)
+  useEffect(() => {
+    setOpen(false);
+  }, [location.pathname]);
 
   const fetchNotifications = useCallback(async () => {
     if (!user) return;
@@ -76,7 +82,7 @@ const NotificationBell = () => {
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent side="bottom" align="end" className="w-80 p-0" sideOffset={8}>
+      <PopoverContent side="bottom" align="end" className="w-80 p-0 z-50" sideOffset={8}>
         <div className="flex items-center justify-between border-b px-4 py-3">
           <h3 className="text-sm font-semibold">Notifications</h3>
           {unreadCount > 0 && (

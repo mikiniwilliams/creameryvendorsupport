@@ -1,17 +1,18 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import NotificationBell from "@/components/NotificationBell";
 import {
   LayoutDashboard, Building2, Users, Bell, LogOut,
-  CheckCircle, Ticket, BookOpen, FileText, Plus, LinkIcon, Copy, Check, Archive
+  CheckCircle, Ticket, BookOpen, FileText, Plus, LinkIcon, Copy, Check, Archive, User
 } from "lucide-react";
 
-const PAGE_TITLES: Record<string, string> = {
+const ADMIN_PAGE_TITLES: Record<string, string> = {
   "/": "Admin Dashboard",
   "/tickets/new": "Create Ticket",
   "/admin/approvals": "Approvals",
@@ -24,9 +25,17 @@ const PAGE_TITLES: Record<string, string> = {
   "/knowledge-base": "Knowledge Base",
 };
 
-const getPageTitle = (pathname: string) => {
-  if (PAGE_TITLES[pathname]) return PAGE_TITLES[pathname];
-  if (pathname.startsWith("/tickets/")) return "Ticket Detail";
+const VENDOR_PAGE_TITLES: Record<string, string> = {
+  "/": "My Dashboard",
+  "/notifications": "Notifications",
+  "/knowledge-base": "Knowledge Base",
+  "/profile": "My Profile",
+};
+
+const getPageTitle = (pathname: string, role: string | null) => {
+  const titles = role === "vendor" ? VENDOR_PAGE_TITLES : ADMIN_PAGE_TITLES;
+  if (titles[pathname]) return titles[pathname];
+  if (pathname.startsWith("/tickets/")) return role === "vendor" ? "Ticket Response" : "Ticket Detail";
   if (pathname.startsWith("/vendors/")) return "Vendor Profile";
   return "VendorCare Connect";
 };
@@ -36,10 +45,32 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
   const isMobile = useIsMobile();
   const [copied, setCopied] = useState(false);
+  const [vendorName, setVendorName] = useState<string | null>(null);
+  const [vendorStats, setVendorStats] = useState({ open: 0, resolved: 0, total: 0 });
+
   const isActive = (path: string) => location.pathname === path || (path !== "/admin/tickets" && location.pathname.startsWith(path + "/")) || (path === "/admin/tickets" && location.pathname === "/admin/tickets");
   const publicFormUrl = `${window.location.origin}/submit-request`;
-  const pageTitle = getPageTitle(location.pathname);
+  const pageTitle = getPageTitle(location.pathname, role);
   const isDashboard = location.pathname === "/";
+
+  // Fetch vendor info for sidebar identity card
+  useEffect(() => {
+    if (role !== "vendor" || !profile?.vendor_id) return;
+    const fetchVendorInfo = async () => {
+      const [vendorRes, ticketsRes] = await Promise.all([
+        supabase.from("vendors").select("name").eq("id", profile.vendor_id!).single(),
+        supabase.from("tickets").select("status").eq("is_archived", false),
+      ]);
+      if (vendorRes.data) setVendorName(vendorRes.data.name);
+      if (ticketsRes.data) {
+        const tickets = ticketsRes.data;
+        const open = tickets.filter((t: any) => ["open", "in_progress", "pending_vendor_response"].includes(t.status)).length;
+        const resolved = tickets.filter((t: any) => t.status === "resolved" || t.status === "closed").length;
+        setVendorStats({ open, resolved, total: tickets.length });
+      }
+    };
+    fetchVendorInfo();
+  }, [role, profile?.vendor_id]);
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(publicFormUrl);
@@ -54,6 +85,8 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
         : "text-[#b8b0a0] hover:bg-white/5 hover:text-[#d4cbbf]"
     }`;
 
+  const resolutionRate = vendorStats.total > 0 ? Math.round((vendorStats.resolved / vendorStats.total) * 100) : 0;
+
   const navContent = (
     <>
       <div className="flex items-center gap-2 px-5 py-5 border-b border-[#2a2118]">
@@ -62,6 +95,24 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
         </div>
         <span className="font-semibold text-white text-sm">VendorCare</span>
       </div>
+
+      {/* Vendor Identity Card */}
+      {role === "vendor" && (
+        <div className="mx-3 mt-4 rounded-lg p-[10px_12px]" style={{ background: "rgba(232,160,32,0.08)", border: "0.5px solid rgba(232,160,32,0.2)" }}>
+          <p className="text-white text-xs font-medium leading-tight">{profile?.full_name || "Vendor User"}</p>
+          <p className="text-[10px] text-[#8a8070] mt-0.5">{vendorName || "Loading..."}</p>
+          <div className="flex gap-2 mt-2">
+            <div className="flex-1 rounded-md bg-[#0f0a05] px-2 py-1.5 text-center">
+              <p className="text-xs font-medium text-white">{vendorStats.open}</p>
+              <p className="text-[9px] text-[#6b6156]">Open</p>
+            </div>
+            <div className="flex-1 rounded-md bg-[#0f0a05] px-2 py-1.5 text-center">
+              <p className="text-xs font-medium text-white">{resolutionRate}%</p>
+              <p className="text-[9px] text-[#6b6156]">Resolved</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
         <Link to="/" className={navClass("/")}>
@@ -120,7 +171,9 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
         )}
 
         <div className="pt-4 pb-1 px-3">
-          <p className="text-[10px] uppercase tracking-wider text-[#6b6156] font-semibold">Other</p>
+          <p className="text-[10px] uppercase tracking-wider text-[#6b6156] font-semibold">
+            {role === "vendor" ? "Help" : "Other"}
+          </p>
         </div>
         <Link to="/notifications" className={navClass("/notifications")}>
           <Bell className="h-4 w-4" /> Notifications
@@ -128,6 +181,11 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
         <Link to="/knowledge-base" className={navClass("/knowledge-base")}>
           <BookOpen className="h-4 w-4" /> Knowledge Base
         </Link>
+        {role === "vendor" && (
+          <Link to="/profile" className={navClass("/profile")}>
+            <User className="h-4 w-4" /> My Profile
+          </Link>
+        )}
       </nav>
 
       <div className="border-t border-[#2a2118] px-4 py-4">
