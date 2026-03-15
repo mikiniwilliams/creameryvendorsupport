@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import NotificationBell from "@/components/NotificationBell";
 import {
   LayoutDashboard, Building2, Users, Bell, LogOut,
-  CheckCircle, Ticket, BookOpen, FileText, Plus, LinkIcon, Copy, Check
+  CheckCircle, Ticket, BookOpen, FileText, Plus, LinkIcon, Copy, Check, Archive
 } from "lucide-react";
 
 const PAGE_TITLES: Record<string, string> = {
@@ -16,6 +16,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/tickets/new": "Create Ticket",
   "/admin/approvals": "Approvals",
   "/admin/tickets": "Ticket Command Center",
+  "/admin/tickets/archived": "Archived Tickets",
   "/admin/templates": "Ticket Templates",
   "/vendors": "Vendors",
   "/users": "User Management",
@@ -35,7 +36,7 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
   const isMobile = useIsMobile();
   const [copied, setCopied] = useState(false);
-  const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + "/");
+  const isActive = (path: string) => location.pathname === path || (path !== "/admin/tickets" && location.pathname.startsWith(path + "/")) || (path === "/admin/tickets" && location.pathname === "/admin/tickets");
   const publicFormUrl = `${window.location.origin}/submit-request`;
   const pageTitle = getPageTitle(location.pathname);
   const isDashboard = location.pathname === "/";
@@ -81,6 +82,9 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
             <Link to="/admin/tickets" className={navClass("/admin/tickets")}>
               <Ticket className="h-4 w-4" /> All Tickets
             </Link>
+            <Link to="/admin/tickets/archived" className={navClass("/admin/tickets/archived")}>
+              <Archive className="h-4 w-4 text-[#6b6156]" /> Archived
+            </Link>
             <Link to="/admin/templates" className={navClass("/admin/templates")}>
               <FileText className="h-4 w-4" /> Templates
             </Link>
@@ -91,18 +95,22 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
               <Users className="h-4 w-4" /> Users
             </Link>
 
-            <div className="pt-3 px-1">
-              <div className="rounded-lg border border-[#2a2118] bg-white/5 p-2.5 space-y-2">
-                <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-[#6b6156] font-semibold">
-                  <LinkIcon className="h-3 w-3" /> Public Form URL
-                </div>
+            <div className="pt-4 pb-1 px-3">
+              <div className="border-t border-[#E8A020]/20 mb-3" />
+              <p className="text-[10px] uppercase tracking-wider text-[#6b6156] font-semibold flex items-center gap-1.5">
+                <LinkIcon className="h-3 w-3" /> Public Form
+              </p>
+            </div>
+            <div className="px-1">
+              <div className="rounded-lg bg-[#0f0a05] p-2.5 space-y-2" style={{ border: '0.5px solid #E8A020' }}>
                 <div className="flex gap-1">
                   <Input
                     readOnly
                     value={publicFormUrl}
-                    className="h-7 text-[10px] bg-[#18120a] border-[#2a2118] text-[#8a8070] px-2"
+                    className="h-7 text-[10px] bg-transparent border-none text-[#E8A020]/80 px-2 focus-visible:ring-0"
                   />
-                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0 shrink-0 text-[#6b6156] hover:text-[#E8A020]" onClick={handleCopyLink}>
+                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0 shrink-0 text-[#6b6156] hover:text-[#E8A020]" onClick={handleCopyLink}
+                    title={copied ? "Copied!" : "Copy URL"}>
                     {copied ? <Check className="h-3 w-3 text-[#E8A020]" /> : <Copy className="h-3 w-3" />}
                   </Button>
                 </div>
@@ -158,7 +166,16 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
               </span>
             )}
           </div>
-          <NotificationBell />
+          <div className="flex items-center gap-2">
+            {role === "admin" && (
+              <Link to="/tickets/new">
+                <Button size="sm" className="gap-1.5 bg-[#E8A020] hover:bg-[#c98a18] text-white h-8 text-xs">
+                  <Plus className="h-3.5 w-3.5" /> New Ticket
+                </Button>
+              </Link>
+            )}
+            <NotificationBell />
+          </div>
         </header>
         <main className={`${isMobile ? "p-3" : "p-6"}`}>{children}</main>
       </div>

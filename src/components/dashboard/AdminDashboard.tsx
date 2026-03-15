@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Ticket, Building2, CheckCircle, AlertTriangle, Clock, Flame } from "lucide-react";
+import { Ticket, Building2, CheckCircle, AlertTriangle, Clock, Flame, TrendingUp } from "lucide-react";
 import DashboardAnalytics from "./DashboardAnalytics";
 
 const getTicketAge = (createdAt: string, status: string) => {
@@ -30,20 +30,21 @@ const TicketAgeIndicator = ({ age }: { age: string | null }) => {
 };
 
 const priorityLeftClass = (priority: string, status: string) => {
-  if (status === "resolved" || status === "closed") return "priority-left-low";
+  if (status === "resolved" || status === "closed") return "priority-left-resolved";
   return `priority-left-${priority}`;
 };
 
 const AdminDashboard = () => {
-  const [stats, setStats] = useState({ totalTickets: 0, openTickets: 0, pendingVendors: 0, pendingUsers: 0, activeVendors: 0 });
+  const [stats, setStats] = useState({ totalTickets: 0, openTickets: 0, pendingVendors: 0, pendingUsers: 0, activeVendors: 0, archivedCount: 0 });
   const [allTickets, setAllTickets] = useState<any[]>([]);
   const [recentTickets, setRecentTickets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
-      const [ticketsRes, vendorsRes, profilesRes] = await Promise.all([
-        supabase.from("tickets").select("*").order("created_at", { ascending: false }),
+      const [ticketsRes, archivedRes, vendorsRes, profilesRes] = await Promise.all([
+        supabase.from("tickets").select("*").eq("is_archived", false).order("created_at", { ascending: false }),
+        supabase.from("tickets").select("id", { count: "exact", head: true }).eq("is_archived", true),
         supabase.from("vendors").select("id, status"),
         supabase.from("profiles").select("status"),
       ]);
@@ -57,12 +58,21 @@ const AdminDashboard = () => {
         pendingVendors: vendors.filter(v => v.status === "pending").length,
         pendingUsers: profiles.filter(p => p.status === "pending").length,
         activeVendors: vendors.filter(v => v.status === "active").length,
+        archivedCount: archivedRes.count || 0,
       });
       setRecentTickets(tickets.slice(0, 5));
       setLoading(false);
     };
     fetchData();
   }, []);
+
+  const resolutionRate = useMemo(() => {
+    if (allTickets.length === 0) return 0;
+    const resolved = allTickets.filter((t: any) => t.status === "resolved" || t.status === "closed").length;
+    return Math.round((resolved / allTickets.length) * 100);
+  }, [allTickets]);
+
+  const resolutionColor = resolutionRate >= 50 ? "#2E7D32" : resolutionRate >= 25 ? "#854F0B" : "#A32D2D";
 
   const formatStatus = (s: string) => s.replace(/_/g, " ");
 
@@ -86,17 +96,21 @@ const AdminDashboard = () => {
       )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {/* Total Tickets - Gold */}
         <Card className="overflow-hidden">
           <div className="h-[2px] bg-[#E8A020]" />
           <CardContent className="flex items-center gap-4 p-5">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#E8A020]/10">
               <Ticket className="h-5 w-5 text-[#E8A020]" />
             </div>
-            <div><p className="text-2xl font-medium">{stats.totalTickets}</p><p className="text-xs text-muted-foreground">Total Tickets</p></div>
+            <div>
+              <p className="text-2xl font-medium">{stats.totalTickets}</p>
+              <p className="text-xs text-muted-foreground">Total Tickets</p>
+              {stats.archivedCount > 0 && (
+                <p className="text-[10px] text-muted-foreground/60">+{stats.archivedCount} archived</p>
+              )}
+            </div>
           </CardContent>
         </Card>
-        {/* Open/Active - Blue */}
         <Card className="overflow-hidden">
           <div className="h-[2px] bg-[#378ADD]" />
           <CardContent className="flex items-center gap-4 p-5">
@@ -106,7 +120,6 @@ const AdminDashboard = () => {
             <div><p className="text-2xl font-medium">{stats.openTickets}</p><p className="text-xs text-muted-foreground">Open / Active</p></div>
           </CardContent>
         </Card>
-        {/* Active Vendors - Teal */}
         <Card className="overflow-hidden">
           <div className="h-[2px] bg-[#1D9E75]" />
           <CardContent className="flex items-center gap-4 p-5">
@@ -116,7 +129,6 @@ const AdminDashboard = () => {
             <div><p className="text-2xl font-medium">{stats.activeVendors}</p><p className="text-xs text-muted-foreground">Active Vendors</p></div>
           </CardContent>
         </Card>
-        {/* Pending Approvals - Red */}
         <Card className="overflow-hidden">
           <div className="h-[2px] bg-[#E24B4A]" />
           <CardContent className="flex items-center gap-4 p-5">
@@ -127,6 +139,20 @@ const AdminDashboard = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Resolution Rate KPI */}
+      <Card className="overflow-hidden">
+        <div className="h-[2px]" style={{ backgroundColor: resolutionColor }} />
+        <CardContent className="flex items-center gap-4 p-5">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full" style={{ backgroundColor: `${resolutionColor}15` }}>
+            <TrendingUp className="h-5 w-5" style={{ color: resolutionColor }} />
+          </div>
+          <div>
+            <p className="text-2xl font-medium" style={{ color: resolutionColor }}>{resolutionRate}%</p>
+            <p className="text-xs text-muted-foreground">Resolution Rate</p>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">

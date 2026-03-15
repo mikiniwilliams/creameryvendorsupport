@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Send, UserCheck, History, Pencil, Trash2, Check, X, Lock } from "lucide-react";
+import { ArrowLeft, Send, UserCheck, History, Pencil, Trash2, Check, X, Lock, Archive } from "lucide-react";
 import ActivityTimeline from "@/components/ActivityTimeline";
 
 interface Ticket {
@@ -104,11 +104,7 @@ const TicketDetail = () => {
     if (!id) return;
     const { error } = await supabase.from("tickets").update({ vendor_id: newVendorId, assigned_to: null }).eq("id", id);
     if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-    else {
-      setTicket(prev => prev ? { ...prev, vendor_id: newVendorId, assigned_to: null } : prev);
-      toast({ title: "Vendor updated" });
-      fetchVendorUsers(newVendorId);
-    }
+    else { setTicket(prev => prev ? { ...prev, vendor_id: newVendorId, assigned_to: null } : prev); toast({ title: "Vendor updated" }); fetchVendorUsers(newVendorId); }
   };
 
   const updateTicket = async (field: string, value: string | null) => {
@@ -156,6 +152,16 @@ const TicketDetail = () => {
     else fetchInternalNotes();
   };
 
+  const handleArchive = async () => {
+    if (!id || !user) return;
+    const { error } = await supabase.from("tickets").update({
+      is_archived: true, archived_at: new Date().toISOString(), archived_by: user.id
+    }).eq("id", id);
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    toast({ title: "Ticket archived" });
+    navigate("/admin/tickets");
+  };
+
   const formatStatus = (s: string) => s.replace(/_/g, " ");
 
   if (loading) return <AppLayout><div className="flex justify-center py-20"><div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" /></div></AppLayout>;
@@ -173,10 +179,24 @@ const TicketDetail = () => {
                 <CardTitle className="text-xl">{ticket.title}</CardTitle>
                 <p className="text-sm text-muted-foreground mt-1">Created {new Date(ticket.created_at).toLocaleString()}</p>
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="outline" className={`status-badge-${ticket.status} capitalize`}>{formatStatus(ticket.status)}</Badge>
                 <Badge variant="outline" className={`priority-badge-${ticket.priority}`}>{ticket.priority}</Badge>
-                <Badge variant="outline" className="capitalize">{ticket.issue_type}</Badge>
+                <Badge variant="outline" className={`type-badge-${ticket.issue_type} capitalize`}>{ticket.issue_type}</Badge>
+                {role === "admin" && (
+                  <ConfirmDialog
+                    trigger={
+                      <Button variant="outline" size="sm" className="gap-1.5 text-muted-foreground border-gray-300 hover:text-foreground">
+                        <Archive className="h-3.5 w-3.5" /> Archive
+                      </Button>
+                    }
+                    title="Archive this ticket?"
+                    description="This ticket will be hidden from all views but preserved in your records. You can restore it anytime from the Archived Tickets section. No data will be deleted."
+                    confirmLabel="Archive Ticket"
+                    variant="default"
+                    onConfirm={handleArchive}
+                  />
+                )}
               </div>
             </div>
           </CardHeader>
@@ -255,7 +275,6 @@ const TicketDetail = () => {
           <CardContent><ActivityTimeline ticketId={ticket.id} userRole={role} key={comments.length} /></CardContent>
         </Card>
 
-        {/* Comments / Internal Notes */}
         <Card>
           {role === "admin" ? (
             <Tabs value={activeTab} onValueChange={setActiveTab}>

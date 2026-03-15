@@ -18,13 +18,13 @@ import KnowledgeBase from "./pages/KnowledgeBase";
 import Notifications from "./pages/Notifications";
 import AdminApprovals from "./pages/AdminApprovals";
 import AdminTickets from "./pages/AdminTickets";
+import ArchivedTickets from "./pages/ArchivedTickets";
 import TicketTemplates from "./pages/TicketTemplates";
 import SubmitRequest from "./pages/SubmitRequest";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-// Redirect vendors away from /tickets/new
 const AdminOnlyNewTicket = () => {
   const { role, loading } = useAuth();
   if (loading) return null;
@@ -40,11 +40,9 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Routes>
-            {/* Public routes - no auth required */}
             <Route path="/submit-request" element={<SubmitRequest />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/onboarding" element={<Onboarding />} />
-            {/* Protected routes */}
             <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
             <Route path="/tickets/new" element={<ProtectedRoute><AdminOnlyNewTicket /></ProtectedRoute>} />
             <Route path="/tickets/:id" element={<ProtectedRoute><TicketDetail /></ProtectedRoute>} />
@@ -52,6 +50,7 @@ const App = () => (
             <Route path="/knowledge-base" element={<ProtectedRoute><KnowledgeBase /></ProtectedRoute>} />
             <Route path="/admin/approvals" element={<ProtectedAdminRoute><AdminApprovals /></ProtectedAdminRoute>} />
             <Route path="/admin/tickets" element={<ProtectedAdminRoute><AdminTickets /></ProtectedAdminRoute>} />
+            <Route path="/admin/tickets/archived" element={<ProtectedAdminRoute><ArchivedTickets /></ProtectedAdminRoute>} />
             <Route path="/admin/templates" element={<ProtectedAdminRoute><TicketTemplates /></ProtectedAdminRoute>} />
             <Route path="/vendors" element={<ProtectedAdminRoute><Vendors /></ProtectedAdminRoute>} />
             <Route path="/vendors/:id" element={<ProtectedAdminRoute><VendorProfile /></ProtectedAdminRoute>} />
