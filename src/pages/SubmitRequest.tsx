@@ -35,6 +35,7 @@ const SubmitRequest = () => {
   const [issueType, setIssueType] = useState("");
   const [description, setDescription] = useState("");
   const [resolution, setResolution] = useState("");
+  const [honeypot, setHoneypot] = useState("");
 
   const resetForm = () => {
     setName(""); setEmail(""); setTransactionDate(undefined);
@@ -45,6 +46,13 @@ const SubmitRequest = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    // Honeypot check — bots will fill this hidden field
+    if (honeypot) {
+      setView("success");
+      setTicketRef("000000");
+      return;
+    }
 
     if (!name.trim() || !email.trim() || !vendorName.trim() || !issueType || !description.trim()) {
       setError("Please fill in all required fields.");
@@ -222,6 +230,20 @@ const SubmitRequest = () => {
                 placeholder="Optional — e.g., refund, replacement, apology..."
                 rows={2}
                 maxLength={500}
+              />
+            </div>
+
+            {/* Honeypot field - hidden from real users, bots will fill it */}
+            <div className="absolute opacity-0 top-0 left-0 h-0 w-0 -z-10 overflow-hidden" aria-hidden="true" tabIndex={-1}>
+              <label htmlFor="website_url">Website</label>
+              <input
+                type="text"
+                id="website_url"
+                name="website_url"
+                value={honeypot}
+                onChange={e => setHoneypot(e.target.value)}
+                autoComplete="off"
+                tabIndex={-1}
               />
             </div>
 
