@@ -12,9 +12,9 @@
 
 @layer base {
   :root {
-    --background: 60 4% 95%;
+    --background: 37 10% 95%;
     --foreground: 24 9% 10%;
-    --card: 60 9% 97%;
+    --card: 0 0% 100%;
     --card-foreground: 24 9% 10%;
     --popover: 20 5% 90%;
     --popover-foreground: 24 9% 10%;
@@ -32,17 +32,17 @@
     --success-foreground: 0 0% 100%;
     --warning: 38 92% 50%;
     --warning-foreground: 38 90% 15%;
-    --border: 23 5% 82%;
+    --border: 33 18% 89%;
     --input: 23 5% 82%;
     --ring: 37 92% 50%;
     --radius: 1rem;
-    --sidebar-background: 222 47% 11%;
-    --sidebar-foreground: 24 9% 10%;
+    --sidebar-background: 30 33% 7%;
+    --sidebar-foreground: 40 20% 90%;
     --sidebar-primary: 37 92% 50%;
     --sidebar-primary-foreground: 47 100% 96%;
-    --sidebar-accent: 24 5% 44%;
-    --sidebar-accent-foreground: 60 9% 97%;
-    --sidebar-border: 23 5% 82%;
+    --sidebar-accent: 37 80% 52%;
+    --sidebar-accent-foreground: 40 20% 90%;
+    --sidebar-border: 30 15% 16%;
     --sidebar-ring: 37 92% 50%;
     --font-sans: 'Source Sans Pro', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
     --font-mono: 'Source Code Pro', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
@@ -51,7 +51,7 @@
     --chart-3: 43 96% 56%;
     --chart-4: 37 92% 50%;
     --chart-5: 24 5% 44%;
-    --sidebar: 60 9% 97%;
+    --sidebar: 30 33% 7%;
     --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
     --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
     --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
@@ -123,16 +123,24 @@
     from { opacity: 0; transform: translateY(4px); }
     to { opacity: 1; transform: translateY(0); }
   }
-  .status-badge-pending { @apply bg-amber-50 text-amber-700 border border-amber-200; }
-  .status-badge-active { @apply bg-emerald-50 text-emerald-700 border border-emerald-200; }
-  .status-badge-disabled { @apply bg-red-50 text-red-700 border border-red-200; }
-  .status-badge-open { @apply bg-blue-50 text-blue-700 border border-blue-200; }
-  .status-badge-in_progress { @apply bg-amber-50 text-amber-700 border border-amber-200; }
-  .status-badge-pending_vendor_response { @apply bg-purple-50 text-purple-700 border border-purple-200; }
-  .status-badge-resolved { @apply bg-emerald-50 text-emerald-700 border border-emerald-200; }
-  .status-badge-closed { @apply bg-slate-100 text-slate-600 border border-slate-200; }
-  .priority-badge-low { @apply bg-slate-50 text-slate-600 border border-slate-200; }
-  .priority-badge-medium { @apply bg-blue-50 text-blue-600 border border-blue-200; }
-  .priority-badge-high { @apply bg-orange-50 text-orange-600 border border-orange-200; }
-  .priority-badge-urgent { @apply bg-red-50 text-red-600 border border-red-200; }
+  .status-badge-pending { background-color: #FAEEDA; color: #854F0B; border: none; }
+  .status-badge-active { background-color: #EAF3DE; color: #3B6D11; border: none; }
+  .status-badge-disabled { background-color: #FCEBEB; color: #A32D2D; border: none; }
+  .status-badge-open { background-color: #E6F1FB; color: #185FA5; border: none; }
+  .status-badge-in_progress { background-color: #EEEDFE; color: #534AB7; border: none; }
+  .status-badge-pending_vendor_response { background-color: #EEEDFE; color: #534AB7; border: none; }
+  .status-badge-resolved { background-color: #EAF3DE; color: #3B6D11; border: none; }
+  .status-badge-closed { background-color: #EAF3DE; color: #3B6D11; border: none; }
+  .priority-badge-low { background-color: #E6F1FB; color: #185FA5; border: none; }
+  .priority-badge-medium { background-color: #FAEEDA; color: #854F0B; border: none; }
+  .priority-badge-high { background-color: #FCEBEB; color: #A32D2D; border: none; }
+  .priority-badge-urgent { background-color: #FCEBEB; color: #A32D2D; border: none; }
+  .type-badge-general { background-color: #F3F2EF; color: #5C5A55; border: none; }
+  .type-badge-bug { background-color: #FCEBEB; color: #A32D2D; border: none; }
+  .type-badge-technical { background-color: #EEEDFE; color: #534AB7; border: none; }
+  .type-badge-billing { background-color: #FAEEDA; color: #854F0B; border: none; }
+  .priority-left-low { border-left: 3px solid #378ADD; }
+  .priority-left-medium { border-left: 3px solid #E8A020; }
+  .priority-left-high { border-left: 3px solid #E24B4A; }
+  .priority-left-urgent { border-left: 3px solid #E24B4A; }
 }

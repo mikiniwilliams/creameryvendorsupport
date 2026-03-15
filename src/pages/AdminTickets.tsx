@@ -120,7 +120,7 @@ const AdminTickets = () => {
     <AppLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold flex items-center gap-2"><Ticket className="h-6 w-6" /> Ticket Command Center</h1>
+          <h1 className="text-2xl font-medium flex items-center gap-2"><Ticket className="h-6 w-6" /> Ticket Command Center</h1>
           <Button variant="outline" size="sm" onClick={exportCsv} disabled={filtered.length === 0} className="gap-2">
             <Download className="h-4 w-4" /> Export CSV
           </Button>
@@ -176,8 +176,8 @@ const AdminTickets = () => {
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Tickets ({filtered.length})</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-base font-medium">Tickets ({filtered.length})</CardTitle>
           </CardHeader>
           <CardContent>
             {loading ? (
@@ -202,7 +202,7 @@ const AdminTickets = () => {
                   </thead>
                   <tbody>
                     {filtered.map(t => (
-                      <tr key={t.id} className="border-b last:border-0 hover:bg-muted/50">
+                      <tr key={t.id} className={`border-b last:border-0 hover:bg-muted/50 priority-left-${t.priority}`}>
                         <td className="py-3 pr-4">
                           <Link to={`/tickets/${t.id}`} className="text-primary hover:underline font-medium">{t.title}</Link>
                         </td>
@@ -214,7 +214,7 @@ const AdminTickets = () => {
                           )}
                         </td>
                         <td className="py-3 pr-4 text-muted-foreground">{getVendorName(t.vendor_id)}</td>
-                        <td className="py-3 pr-4"><Badge variant="outline" className="text-xs capitalize">{t.issue_type}</Badge></td>
+                        <td className="py-3 pr-4"><Badge variant="outline" className={`type-badge-${t.issue_type} text-xs capitalize`}>{t.issue_type}</Badge></td>
                         <td className="py-3 pr-4"><Badge variant="outline" className={`status-badge-${t.status} text-xs capitalize`}>{formatStatus(t.status)}</Badge></td>
                         <td className="py-3 pr-4"><Badge variant="outline" className={`priority-badge-${t.priority} text-xs`}>{t.priority}</Badge></td>
                         <td className="py-3 pr-4 text-muted-foreground text-xs">{getAssignedName(t.assigned_to)}</td>
