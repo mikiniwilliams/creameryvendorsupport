@@ -21,6 +21,7 @@ import AdminTickets from "./pages/AdminTickets";
 import ArchivedTickets from "./pages/ArchivedTickets";
 import TicketTemplates from "./pages/TicketTemplates";
 import SubmitRequest from "./pages/SubmitRequest";
+import VendorProfilePage from "./pages/VendorProfilePage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
