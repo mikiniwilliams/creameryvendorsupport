@@ -91,7 +91,7 @@ const ActivityTimeline = ({ ticketId, userRole }: { ticketId: string; userRole?:
         if (userIds.length > 0) {
           const { data: profileData } = await supabase
             .from("profiles")
-            .select("user_id, full_name")
+            .select("user_id, full_name, email")
             .in("user_id", userIds);
           if (profileData) {
             const map: ProfileMap = {};
