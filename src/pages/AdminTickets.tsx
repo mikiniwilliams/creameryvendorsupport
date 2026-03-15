@@ -220,6 +220,7 @@ const AdminTickets = () => {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b text-left">
+                      <th className="pb-3 font-medium text-muted-foreground w-[90px]">Ref #</th>
                       <th className="pb-3 font-medium text-muted-foreground">Title</th>
                       <th className="pb-3 font-medium text-muted-foreground">Source</th>
                       <th className="pb-3 font-medium text-muted-foreground">Vendor</th>
