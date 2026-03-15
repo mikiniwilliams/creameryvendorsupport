@@ -29,6 +29,11 @@ const TicketAgeIndicator = ({ age }: { age: string | null }) => {
   );
 };
 
+const priorityLeftClass = (priority: string, status: string) => {
+  if (status === "resolved" || status === "closed") return "priority-left-low";
+  return `priority-left-${priority}`;
+};
+
 const AdminDashboard = () => {
   const [stats, setStats] = useState({ totalTickets: 0, openTickets: 0, pendingVendors: 0, pendingUsers: 0, activeVendors: 0 });
   const [allTickets, setAllTickets] = useState<any[]>([]);
@@ -65,7 +70,7 @@ const AdminDashboard = () => {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+      <h1 className="text-2xl font-medium">Admin Dashboard</h1>
 
       {(stats.pendingVendors > 0 || stats.pendingUsers > 0) && (
         <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 flex items-center gap-3">
@@ -81,28 +86,52 @@ const AdminDashboard = () => {
       )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card><CardContent className="flex items-center gap-4 p-5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10"><Ticket className="h-5 w-5 text-primary" /></div>
-          <div><p className="text-2xl font-bold">{stats.totalTickets}</p><p className="text-xs text-muted-foreground">Total Tickets</p></div>
-        </CardContent></Card>
-        <Card><CardContent className="flex items-center gap-4 p-5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50"><Clock className="h-5 w-5 text-blue-600" /></div>
-          <div><p className="text-2xl font-bold">{stats.openTickets}</p><p className="text-xs text-muted-foreground">Open / Active</p></div>
-        </CardContent></Card>
-        <Card><CardContent className="flex items-center gap-4 p-5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50"><Building2 className="h-5 w-5 text-emerald-600" /></div>
-          <div><p className="text-2xl font-bold">{stats.activeVendors}</p><p className="text-xs text-muted-foreground">Active Vendors</p></div>
-        </CardContent></Card>
-        <Card><CardContent className="flex items-center gap-4 p-5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-50"><CheckCircle className="h-5 w-5 text-amber-600" /></div>
-          <div><p className="text-2xl font-bold">{stats.pendingVendors + stats.pendingUsers}</p><p className="text-xs text-muted-foreground">Pending Approvals</p></div>
-        </CardContent></Card>
+        {/* Total Tickets - Gold */}
+        <Card className="overflow-hidden">
+          <div className="h-[2px] bg-[#E8A020]" />
+          <CardContent className="flex items-center gap-4 p-5">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#E8A020]/10">
+              <Ticket className="h-5 w-5 text-[#E8A020]" />
+            </div>
+            <div><p className="text-2xl font-medium">{stats.totalTickets}</p><p className="text-xs text-muted-foreground">Total Tickets</p></div>
+          </CardContent>
+        </Card>
+        {/* Open/Active - Blue */}
+        <Card className="overflow-hidden">
+          <div className="h-[2px] bg-[#378ADD]" />
+          <CardContent className="flex items-center gap-4 p-5">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#378ADD]/10">
+              <Clock className="h-5 w-5 text-[#378ADD]" />
+            </div>
+            <div><p className="text-2xl font-medium">{stats.openTickets}</p><p className="text-xs text-muted-foreground">Open / Active</p></div>
+          </CardContent>
+        </Card>
+        {/* Active Vendors - Teal */}
+        <Card className="overflow-hidden">
+          <div className="h-[2px] bg-[#1D9E75]" />
+          <CardContent className="flex items-center gap-4 p-5">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#1D9E75]/10">
+              <Building2 className="h-5 w-5 text-[#1D9E75]" />
+            </div>
+            <div><p className="text-2xl font-medium">{stats.activeVendors}</p><p className="text-xs text-muted-foreground">Active Vendors</p></div>
+          </CardContent>
+        </Card>
+        {/* Pending Approvals - Red */}
+        <Card className="overflow-hidden">
+          <div className="h-[2px] bg-[#E24B4A]" />
+          <CardContent className="flex items-center gap-4 p-5">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#E24B4A]/10">
+              <CheckCircle className="h-5 w-5 text-[#E24B4A]" />
+            </div>
+            <div><p className="text-2xl font-medium">{stats.pendingVendors + stats.pendingUsers}</p><p className="text-xs text-muted-foreground">Pending Approvals</p></div>
+          </CardContent>
+        </Card>
       </div>
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-base">Recent Tickets</CardTitle>
-          <Link to="/admin/tickets"><Button variant="outline" size="sm">View All</Button></Link>
+          <CardTitle className="text-base font-medium">Recent Tickets</CardTitle>
+          <Link to="/admin/tickets"><Button variant="link" size="sm" className="text-[#E8A020] hover:text-[#c98a18] p-0 h-auto">View All →</Button></Link>
         </CardHeader>
         <CardContent>
           {recentTickets.length === 0 ? (
@@ -110,7 +139,7 @@ const AdminDashboard = () => {
           ) : (
             <div className="space-y-2">
               {recentTickets.map((t: any) => (
-                <Link key={t.id} to={`/tickets/${t.id}`} className="flex items-center justify-between rounded-lg border p-3 hover:bg-muted/50 transition-colors">
+                <Link key={t.id} to={`/tickets/${t.id}`} className={`flex items-center justify-between rounded-lg border border-[#e8e3d8] p-3 hover:bg-muted/50 transition-colors ${priorityLeftClass(t.priority, t.status)}`}>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium truncate">{t.title}</p>
                     <p className="text-xs text-muted-foreground">{t.issue_type || "general"} · {new Date(t.created_at).toLocaleDateString()}</p>

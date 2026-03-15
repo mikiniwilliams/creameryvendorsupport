@@ -176,8 +176,8 @@ const AdminTickets = () => {
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Tickets ({filtered.length})</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-base font-medium">Tickets ({filtered.length})</CardTitle>
           </CardHeader>
           <CardContent>
             {loading ? (
