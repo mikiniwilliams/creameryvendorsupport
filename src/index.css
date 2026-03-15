@@ -123,6 +123,13 @@
     from { opacity: 0; transform: translateY(4px); }
     to { opacity: 1; transform: translateY(0); }
   }
+  .animate-slide-in-right {
+    animation: slideInRight 0.3s ease-out;
+  }
+  @keyframes slideInRight {
+    from { opacity: 0; transform: translateX(16px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
   .status-badge-pending { background-color: #FAEEDA; color: #854F0B; border: none; }
   .status-badge-active { background-color: #EAF3DE; color: #3B6D11; border: none; }
   .status-badge-disabled { background-color: #FCEBEB; color: #A32D2D; border: none; }

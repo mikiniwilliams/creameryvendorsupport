@@ -37,7 +37,11 @@ type SortKey = "updated_at" | "created_at" | "priority" | "status";
 const priorityOrder: Record<string, number> = { urgent: 0, high: 1, medium: 2, low: 3 };
 const statusOrder: Record<string, number> = { open: 0, in_progress: 1, pending_vendor_response: 2, resolved: 3, closed: 4 };
 
-const VendorDashboard = () => {
+interface VendorDashboardProps {
+  onClosePreview?: () => void;
+}
+
+const VendorDashboard = ({ onClosePreview }: VendorDashboardProps = {}) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [tickets, setTickets] = useState<any[]>([]);
@@ -77,10 +81,14 @@ const VendorDashboard = () => {
     if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
   }, []);
 
+  // V4: Close preview when opening ticket card click
+  const handleCardClick = useCallback(() => {
+    // Preview will close on navigation anyway
+  }, []);
+
   const openCount = tickets.filter(t => ["open", "in_progress", "pending_vendor_response"].includes(t.status)).length;
   const resolvedCount = tickets.filter(t => t.status === "resolved" || t.status === "closed").length;
 
-  // Overdue tickets: open/in_progress for >72 hours without update
   const overdueTickets = useMemo(() => {
     const now = Date.now();
     const SEVENTY_TWO_HOURS = 72 * 60 * 60 * 1000;
@@ -124,7 +132,7 @@ const VendorDashboard = () => {
     <div className="animate-fade-in space-y-6 relative">
       <h1 className="text-2xl font-bold">My Tickets</h1>
 
-      {/* KPI Cards with accent bars */}
+      {/* KPI Cards */}
       <div className="grid gap-4 sm:grid-cols-3">
         <Card className="overflow-hidden">
           <div className="h-[2px] w-full" style={{ background: "#E8A020" }} />
@@ -155,7 +163,7 @@ const VendorDashboard = () => {
         </Card>
       </div>
 
-      {/* Overdue Warning Banner */}
+      {/* Overdue Warning */}
       {overdueTickets.length > 0 && (
         <div className="flex items-center gap-3 rounded-lg border px-4 py-3" style={{ background: "#FAEEDA", borderColor: "#E8A020" }}>
           <AlertTriangle className="h-5 w-5 shrink-0" style={{ color: "#854F0B" }} />

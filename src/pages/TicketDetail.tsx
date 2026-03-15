@@ -8,8 +8,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Send, UserCheck, History, Pencil, Trash2, Check, X, Lock, Archive, AlertCircle } from "lucide-react";
 import ActivityTimeline from "@/components/ActivityTimeline";
@@ -40,7 +43,7 @@ const VENDOR_STATUSES = [
 
 const TicketDetail = () => {
   const { id } = useParams<{ id: string }>();
-  const { user, role } = useAuth();
+  const { user, role, profile } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [ticket, setTicket] = useState<Ticket | null>(null);
@@ -55,6 +58,17 @@ const TicketDetail = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState("");
   const [activeTab, setActiveTab] = useState("public");
+
+  // Editable title/description (admin only)
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [editTitleValue, setEditTitleValue] = useState("");
+  const [editingDesc, setEditingDesc] = useState(false);
+  const [editDescValue, setEditDescValue] = useState("");
+
+  // Vendor status change note modal (V5)
+  const [statusChangeModal, setStatusChangeModal] = useState(false);
+  const [pendingStatus, setPendingStatus] = useState<string | null>(null);
+  const [statusNote, setStatusNote] = useState("");
 
   const fetchData = async () => {
     if (!id) return;
@@ -115,6 +129,63 @@ const TicketDetail = () => {
     else { setTicket(prev => prev ? { ...prev, [field]: value } : prev); toast({ title: "Ticket updated" }); }
   };
 
+  // A4: Save editable title
+  const saveTitle = async () => {
+    if (!id || !editTitleValue.trim()) return;
+    const oldTitle = ticket?.title || "";
+    const { error } = await supabase.from("tickets").update({ title: editTitleValue.trim() }).eq("id", id);
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    // Log activity
+    await supabase.from("ticket_activity").insert({
+      ticket_id: id, user_id: user?.id, activity_type: "title_updated",
+      old_value: oldTitle, new_value: editTitleValue.trim()
+    });
+    setTicket(prev => prev ? { ...prev, title: editTitleValue.trim() } : prev);
+    setEditingTitle(false);
+    toast({ title: "Title updated" });
+  };
+
+  // A5: Save editable description
+  const saveDescription = async () => {
+    if (!id || !editDescValue.trim()) return;
+    const oldDesc = ticket?.description || "";
+    const { error } = await supabase.from("tickets").update({ description: editDescValue.trim() }).eq("id", id);
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    await supabase.from("ticket_activity").insert({
+      ticket_id: id, user_id: user?.id, activity_type: "description_updated",
+      old_value: oldDesc, new_value: editDescValue.trim()
+    });
+    setTicket(prev => prev ? { ...prev, description: editDescValue.trim() } : prev);
+    setEditingDesc(false);
+    toast({ title: "Description updated" });
+  };
+
+  // V5: Vendor status change with note prompt
+  const handleVendorStatusChange = (newStatus: string) => {
+    setPendingStatus(newStatus);
+    setStatusNote("");
+    setStatusChangeModal(true);
+  };
+
+  const confirmVendorStatusChange = async (withNote: boolean) => {
+    if (!id || !pendingStatus) return;
+    setSubmitting(true);
+    const { error } = await supabase.from("tickets").update({ status: pendingStatus }).eq("id", id);
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); setSubmitting(false); return; }
+    if (withNote && statusNote.trim() && user) {
+      await supabase.from("comments").insert({
+        ticket_id: id, user_id: user.id,
+        content: `[Status → ${pendingStatus.replace(/_/g, " ")}] ${statusNote.trim()}`
+      });
+    }
+    setTicket(prev => prev ? { ...prev, status: pendingStatus } : prev);
+    setStatusChangeModal(false);
+    setPendingStatus(null);
+    setSubmitting(false);
+    toast({ title: "Status updated" });
+    fetchData();
+  };
+
   const addComment = async () => {
     if (!id || !user || !newComment.trim()) return;
     if (newComment.trim().length > 5000) { toast({ title: "Error", description: "Comment too long.", variant: "destructive" }); return; }
@@ -168,13 +239,17 @@ const TicketDetail = () => {
   if (loading) return <AppLayout><div className="flex justify-center py-20"><div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" /></div></AppLayout>;
   if (!ticket) return <AppLayout><div className="text-center py-20"><p className="text-muted-foreground">Ticket not found.</p><Button variant="ghost" onClick={() => navigate("/")} className="mt-4">Go back</Button></div></AppLayout>;
 
+  // A6: Show customer context card for admin if description contains "Requested Resolution:"
+  const hasCustomerContext = ticket.description && ticket.description.includes("Requested Resolution:");
+  const showCustomerContextForAdmin = role === "admin" && hasCustomerContext;
+
   return (
     <AppLayout>
       <div className="mx-auto max-w-3xl space-y-6">
         <Button variant="ghost" onClick={() => navigate(-1)} className="gap-2"><ArrowLeft className="h-4 w-4" /> Back</Button>
 
-        {/* Customer Context Card for Vendors */}
-        {role === "vendor" && (
+        {/* Customer Context Card — show for vendors always, for admins if resolution info exists */}
+        {(role === "vendor" || showCustomerContextForAdmin) && (
           <Card className="border-l-4" style={{ borderLeftColor: "#378ADD" }}>
             <CardContent className="p-4 space-y-3">
               <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Customer Request</p>
@@ -201,35 +276,75 @@ const TicketDetail = () => {
           <CardHeader>
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0 flex-1">
-                <CardTitle className="text-xl">{ticket.title}</CardTitle>
+                {/* A4: Editable title for admin */}
+                {editingTitle && role === "admin" ? (
+                  <div className="space-y-2">
+                    <Input value={editTitleValue} onChange={e => setEditTitleValue(e.target.value)} className="text-xl font-semibold" />
+                    <div className="flex gap-2">
+                      <Button size="sm" onClick={saveTitle} disabled={!editTitleValue.trim()} className="gap-1"><Check className="h-3 w-3" /> Save</Button>
+                      <Button size="sm" variant="ghost" onClick={() => setEditingTitle(false)} className="gap-1"><X className="h-3 w-3" /> Cancel</Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <CardTitle className="text-xl">{ticket.title}</CardTitle>
+                    {role === "admin" && (
+                      <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-foreground" onClick={() => { setEditTitleValue(ticket.title); setEditingTitle(true); }}>
+                        <Pencil className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
+                )}
                 <p className="text-sm text-muted-foreground mt-1">Created {new Date(ticket.created_at).toLocaleString()}</p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="outline" className={`status-badge-${ticket.status} capitalize`}>{formatStatus(ticket.status)}</Badge>
                 <Badge variant="outline" className={`priority-badge-${ticket.priority}`}>{ticket.priority}</Badge>
                 <Badge variant="outline" className={`type-badge-${ticket.issue_type} capitalize`}>{ticket.issue_type}</Badge>
+                {/* A10: Archive button with visual separation */}
                 {role === "admin" && (
-                  <ConfirmDialog
-                    trigger={
-                      <Button variant="outline" size="sm" className="gap-1.5 text-muted-foreground border-gray-300 hover:text-foreground">
-                        <Archive className="h-3.5 w-3.5" /> Archive
-                      </Button>
-                    }
-                    title="Archive this ticket?"
-                    description="This ticket will be hidden from all views but preserved in your records. You can restore it anytime from the Archived Tickets section. No data will be deleted."
-                    confirmLabel="Archive Ticket"
-                    variant="default"
-                    onConfirm={handleArchive}
-                  />
+                  <>
+                    <Separator orientation="vertical" className="h-6 mx-1" />
+                    <ConfirmDialog
+                      trigger={
+                        <Button variant="outline" size="sm" className="gap-1.5 border-gray-300 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-colors" style={{ background: "#F1EFE8", color: "#6b6156" }}>
+                          <Archive className="h-3.5 w-3.5" /> Archive
+                        </Button>
+                      }
+                      title="Archive this ticket?"
+                      description="This ticket will be hidden from all views but preserved in your records. You can restore it anytime from the Archived Tickets section. No data will be deleted."
+                      confirmLabel="Archive Ticket"
+                      variant="default"
+                      onConfirm={handleArchive}
+                    />
+                  </>
                 )}
               </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
-            {role === "admin" && ticket.description && (
+            {/* A5: Editable description for admin */}
+            {role === "admin" && (
               <div>
-                <h3 className="text-sm font-medium mb-2">Description</h3>
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{ticket.description}</p>
+                <div className="flex items-center gap-2 mb-2">
+                  <h3 className="text-sm font-medium">Description</h3>
+                  {!editingDesc && (
+                    <Button variant="ghost" size="icon" className="h-5 w-5 text-muted-foreground hover:text-foreground" onClick={() => { setEditDescValue(ticket.description || ""); setEditingDesc(true); }}>
+                      <Pencil className="h-3 w-3" />
+                    </Button>
+                  )}
+                </div>
+                {editingDesc ? (
+                  <div className="space-y-2">
+                    <Textarea value={editDescValue} onChange={e => setEditDescValue(e.target.value)} rows={4} />
+                    <div className="flex gap-2">
+                      <Button size="sm" onClick={saveDescription} disabled={!editDescValue.trim()} className="gap-1"><Check className="h-3 w-3" /> Save</Button>
+                      <Button size="sm" variant="ghost" onClick={() => setEditingDesc(false)} className="gap-1"><X className="h-3 w-3" /> Cancel</Button>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">{ticket.description || <span className="italic">No description</span>}</p>
+                )}
               </div>
             )}
 
@@ -279,11 +394,15 @@ const TicketDetail = () => {
               </div>
             )}
 
+            {/* V5: Vendor status with note prompt */}
             {role === "vendor" && (
               <div className="border-t pt-4">
                 <div className="rounded-lg border p-4" style={{ borderLeftWidth: 3, borderLeftColor: "#E8A020" }}>
                   <label className="text-xs font-semibold text-foreground">Your Response Status</label>
-                  <Select value={VENDOR_STATUSES.some(s => s.value === ticket.status) ? ticket.status : ""} onValueChange={(v) => updateTicket("status", v)}>
+                  <Select
+                    value={VENDOR_STATUSES.some(s => s.value === ticket.status) ? ticket.status : ""}
+                    onValueChange={handleVendorStatusChange}
+                  >
                     <SelectTrigger className="w-[200px] mt-2"><SelectValue placeholder="Select status" /></SelectTrigger>
                     <SelectContent>
                       {VENDOR_STATUSES.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
@@ -296,13 +415,34 @@ const TicketDetail = () => {
           </CardContent>
         </Card>
 
-        {/* Activity Card - gray accent for vendor distinction */}
+        {/* V5: Status change note modal */}
+        <Dialog open={statusChangeModal} onOpenChange={setStatusChangeModal}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add a note about this status change (recommended)</DialogTitle>
+            </DialogHeader>
+            <Textarea
+              value={statusNote}
+              onChange={e => setStatusNote(e.target.value)}
+              placeholder="Explain what you did or what's happening next..."
+              rows={3}
+            />
+            <DialogFooter className="gap-2">
+              <Button variant="outline" onClick={() => confirmVendorStatusChange(false)} disabled={submitting}>Skip</Button>
+              <Button onClick={() => confirmVendorStatusChange(true)} disabled={submitting || !statusNote.trim()} style={{ background: "#E8A020" }} className="text-white">
+                Add Note & Save
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Activity Card - V6: gray bg for vendor */}
         <Card style={role === "vendor" ? { borderLeftWidth: 3, borderLeftColor: "#d4d4d4", background: "#f8f7f5" } : {}}>
           <CardHeader><CardTitle className="text-lg flex items-center gap-2"><History className="h-4 w-4" /> Activity</CardTitle></CardHeader>
           <CardContent><ActivityTimeline ticketId={ticket.id} userRole={role} key={comments.length} /></CardContent>
         </Card>
 
-        {/* Comments Card - gold accent for vendor */}
+        {/* Comments Card */}
         <Card style={role === "vendor" ? { borderLeftWidth: 3, borderLeftColor: "#E8A020" } : {}}>
           {role === "admin" ? (
             <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -317,11 +457,12 @@ const TicketDetail = () => {
               <CardContent>
                 <TabsContent value="public" className="mt-0 space-y-4">
                   {renderComments()}
-                  {renderCommentInput()}
+                  {renderCommentInput("public")}
                 </TabsContent>
-                <TabsContent value="internal" className="mt-0 space-y-4">
+                <TabsContent value="internal" className="mt-0 space-y-4" style={{ background: "#FFFEF0", borderRadius: 8, padding: 16, margin: -16 }}>
+                  {/* A9: Admin only label */}
                   <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2 flex items-center gap-1.5">
-                    <Lock className="h-3 w-3" /> Visible to admins only
+                    <Lock className="h-3 w-3" /> Admin only — not visible to vendors
                   </p>
                   {internalNotes.length === 0 && <p className="text-sm text-muted-foreground">No internal notes yet.</p>}
                   {internalNotes.map(n => (
@@ -344,7 +485,9 @@ const TicketDetail = () => {
                     </div>
                   ))}
                   <div className="flex gap-2 pt-2">
-                    <Textarea value={newNote} onChange={(e) => setNewNote(e.target.value)} placeholder="Add an internal note…" rows={2} className="flex-1 border-amber-200 bg-amber-50/30" />
+                    <Textarea value={newNote} onChange={(e) => setNewNote(e.target.value)}
+                      placeholder="Write an internal admin note — vendors cannot see this"
+                      rows={3} className="flex-1 border-amber-200 bg-amber-50/30 focus:border-[#E8A020] focus:ring-[#E8A020]/20" />
                     <Button onClick={addInternalNote} disabled={submitting || !newNote.trim()} size="icon" className="shrink-0 self-end"><Send className="h-4 w-4" /></Button>
                   </div>
                 </TabsContent>
@@ -355,7 +498,7 @@ const TicketDetail = () => {
               <CardHeader><CardTitle className="text-lg">Comments ({comments.length})</CardTitle></CardHeader>
               <CardContent className="space-y-4">
                 {renderComments()}
-                {renderCommentInput()}
+                {renderCommentInput("vendor")}
               </CardContent>
             </>
           )}
@@ -418,14 +561,20 @@ const TicketDetail = () => {
     );
   }
 
-  function renderCommentInput() {
+  function renderCommentInput(context: "public" | "vendor") {
+    const placeholder = context === "vendor"
+      ? "Add your response or update for the admin and customer..."
+      : (activeTab === "public"
+        ? "Write a response or internal note..."
+        : "Write an internal admin note — vendors cannot see this");
+
     return (
       <div className="flex gap-2 pt-2">
         <Textarea
           value={newComment}
           onChange={(e) => setNewComment(e.target.value)}
-          placeholder={role === "vendor" ? "Add your response or update for the admin and customer..." : "Add a comment…"}
-          rows={2}
+          placeholder={placeholder}
+          rows={3}
           className="flex-1 focus:border-[#E8A020] focus:ring-[#E8A020]/20"
         />
         <Button onClick={addComment} disabled={submitting || !newComment.trim()} className="shrink-0 self-end gap-1.5 px-3">

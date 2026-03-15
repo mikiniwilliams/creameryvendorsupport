@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Ticket, Search, Download, Clock, Flame, Archive } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ConfirmDialog from "@/components/ConfirmDialog";
@@ -79,9 +80,9 @@ const AdminTickets = () => {
 
   const getVendorName = (id: string) => vendors.find(v => v.id === id)?.name || "Unknown";
   const getAssignedName = (id: string | null) => {
-    if (!id) return "Unassigned";
+    if (!id) return null;
     const a = admins.find(a => a.user_id === id);
-    return a?.full_name || a?.email || "Unassigned";
+    return a?.full_name || a?.email || null;
   };
 
   const filtered = tickets.filter(t => {
@@ -108,7 +109,6 @@ const AdminTickets = () => {
       return;
     }
 
-    // Fade out animation delay
     setTimeout(() => {
       setTickets(prev => prev.filter(t => t.id !== ticketId));
       setArchivingId(null);
@@ -131,7 +131,7 @@ const AdminTickets = () => {
     const escape = (v: string) => `"${v.replace(/"/g, '""')}"`;
     const rows = filtered.map(t => [
       escape(t.title), escape(getVendorName(t.vendor_id)), escape(t.issue_type),
-      escape(t.status), escape(t.priority), escape(getAssignedName(t.assigned_to)),
+      escape(t.status), escape(t.priority), escape(getAssignedName(t.assigned_to) || "Unassigned"),
       escape(new Date(t.created_at).toLocaleDateString()),
     ].join(","));
     const csv = [headers.join(","), ...rows].join("\n");
@@ -228,41 +228,55 @@ const AdminTickets = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {filtered.map(t => (
-                      <tr key={t.id} className={`border-b last:border-0 hover:bg-muted/50 ${priorityLeftClass(t.priority, t.status)} ${archivingId === t.id ? "animate-fade-out" : ""}`}>
-                        <td className="py-3 pr-4">
-                          <Link to={`/tickets/${t.id}`} className="text-primary hover:underline font-medium">{t.title}</Link>
-                        </td>
-                        <td className="py-3 pr-4">
-                          {t.source === "public_form" ? (
-                            <Badge variant="outline" className="text-[10px] bg-amber-50 text-amber-700 border-amber-200">Public Form</Badge>
-                          ) : (
-                            <span className="text-xs text-muted-foreground">Internal</span>
-                          )}
-                        </td>
-                        <td className="py-3 pr-4 text-muted-foreground">{getVendorName(t.vendor_id)}</td>
-                        <td className="py-3 pr-4"><Badge variant="outline" className={`type-badge-${t.issue_type} text-xs capitalize`}>{t.issue_type}</Badge></td>
-                        <td className="py-3 pr-4"><Badge variant="outline" className={`status-badge-${t.status} text-xs capitalize`}>{formatStatus(t.status)}</Badge></td>
-                        <td className="py-3 pr-4"><Badge variant="outline" className={`priority-badge-${t.priority} text-xs`}>{t.priority}</Badge></td>
-                        <td className="py-3 pr-4 text-muted-foreground text-xs">{getAssignedName(t.assigned_to)}</td>
-                        <td className="py-3 pr-4"><TicketAgeIndicator age={getTicketAge(t.created_at, t.status)} /></td>
-                        <td className="py-3 pr-2 text-muted-foreground text-xs">{new Date(t.created_at).toLocaleDateString()}</td>
-                        <td className="py-3">
-                          <ConfirmDialog
-                            trigger={
-                              <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" title="Archive ticket">
-                                <Archive className="h-3.5 w-3.5" />
-                              </Button>
-                            }
-                            title="Archive this ticket?"
-                            description="This ticket will be hidden from all views but preserved in your records. You can restore it anytime from the Archived Tickets section. No data will be deleted."
-                            confirmLabel="Archive Ticket"
-                            variant="default"
-                            onConfirm={() => handleArchive(t.id)}
-                          />
-                        </td>
-                      </tr>
-                    ))}
+                    {filtered.map(t => {
+                      const assignedName = getAssignedName(t.assigned_to);
+                      return (
+                        <tr key={t.id} className={`border-b last:border-0 hover:bg-muted/50 ${priorityLeftClass(t.priority, t.status)} ${archivingId === t.id ? "animate-fade-out" : ""}`}>
+                          <td className="py-3 pr-4">
+                            <Link to={`/tickets/${t.id}`} className="text-primary hover:underline font-medium">{t.title}</Link>
+                          </td>
+                          <td className="py-3 pr-4">
+                            {t.source === "public_form" ? (
+                              <Badge variant="outline" className="text-[10px] border-0" style={{ background: "#E1F5EE", color: "#0F6E56" }}>Public Form</Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-[10px] border-0" style={{ background: "#F1EFE8", color: "#5F5E5A" }}>Internal</Badge>
+                            )}
+                          </td>
+                          <td className="py-3 pr-4 text-muted-foreground">{getVendorName(t.vendor_id)}</td>
+                          <td className="py-3 pr-4"><Badge variant="outline" className={`type-badge-${t.issue_type} text-xs capitalize`}>{t.issue_type}</Badge></td>
+                          <td className="py-3 pr-4"><Badge variant="outline" className={`status-badge-${t.status} text-xs capitalize`}>{formatStatus(t.status)}</Badge></td>
+                          <td className="py-3 pr-4"><Badge variant="outline" className={`priority-badge-${t.priority} text-xs`}>{t.priority}</Badge></td>
+                          <td className="py-3 pr-4 text-xs">
+                            {assignedName ? (
+                              <span className="text-foreground">{assignedName}</span>
+                            ) : (
+                              <span className="italic" style={{ color: "#9CA3AF" }}>Unassigned</span>
+                            )}
+                          </td>
+                          <td className="py-3 pr-4"><TicketAgeIndicator age={getTicketAge(t.created_at, t.status)} /></td>
+                          <td className="py-3 pr-2 text-muted-foreground text-xs">{new Date(t.created_at).toLocaleDateString()}</td>
+                          <td className="py-3">
+                            <ConfirmDialog
+                              trigger={
+                                <Tooltip delayDuration={500}>
+                                  <TooltipTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground">
+                                      <Archive className="h-3.5 w-3.5" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Archive ticket</TooltipContent>
+                                </Tooltip>
+                              }
+                              title="Archive this ticket?"
+                              description="This ticket will be hidden from all views but preserved in your records. You can restore it anytime from the Archived Tickets section. No data will be deleted."
+                              confirmLabel="Archive Ticket"
+                              variant="default"
+                              onConfirm={() => handleArchive(t.id)}
+                            />
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

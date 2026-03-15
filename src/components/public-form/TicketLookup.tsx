@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Search, ArrowLeft, Clock, AlertCircle } from "lucide-react";
+import { ArrowLeft, Clock, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -73,25 +73,20 @@ const TicketLookup = ({ onBack }: { onBack: () => void }) => {
   const statusInfo = result ? statusConfig[result.status] || { label: result.status, variant: "outline" as const } : null;
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
+    <div className="flex flex-1 items-center justify-center p-4">
       <Card className="w-full max-w-[640px] animate-fade-in">
         <CardHeader className="text-center space-y-3 pb-2">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-primary">
-            <Search className="h-6 w-6 text-primary-foreground" />
-          </div>
-          <CardTitle className="text-xl">Check Request Status</CardTitle>
+          {/* P3: Text header */}
+          <p className="text-3xl">🍦</p>
+          <CardTitle className="text-xl font-serif">Check Request Status</CardTitle>
           <CardDescription className="text-sm max-w-md mx-auto">
             Enter your reference number and the email you used when submitting your request.
           </CardDescription>
+          {/* P8: Reassurance text */}
+          <p className="text-xs text-muted-foreground">You'll see your current ticket status and any updates from our team.</p>
         </CardHeader>
         <CardContent className="space-y-4">
           <form onSubmit={handleLookup} className="space-y-4">
-            {error && (
-              <div className="rounded-md bg-destructive/10 border border-destructive/30 p-3 text-sm text-destructive">
-                {error}
-              </div>
-            )}
-
             <div className="space-y-2">
               <Label htmlFor="ref">Reference Number <span className="text-destructive">*</span></Label>
               <Input
@@ -102,6 +97,8 @@ const TicketLookup = ({ onBack }: { onBack: () => void }) => {
                 maxLength={10}
                 required
               />
+              {/* P8: Helper text */}
+              <p className="text-xs italic text-muted-foreground">Your 6-character reference number was shown on your confirmation screen.</p>
             </div>
 
             <div className="space-y-2">
@@ -121,13 +118,20 @@ const TicketLookup = ({ onBack }: { onBack: () => void }) => {
             </Button>
           </form>
 
+          {/* P8: Inline error for not found */}
           {searched && !loading && !result && !error && (
-            <div className="rounded-md border border-muted p-6 text-center space-y-2">
-              <AlertCircle className="h-10 w-10 text-muted-foreground mx-auto" />
-              <p className="text-sm font-medium">No request found</p>
-              <p className="text-xs text-muted-foreground">
-                Please check that your reference number and email address are correct.
+            <div className="rounded-md border border-red-200 bg-red-50 p-4 text-center space-y-1">
+              <AlertCircle className="h-8 w-8 text-red-400 mx-auto" />
+              <p className="text-sm font-medium text-red-700">We couldn't find a request matching that reference number and email.</p>
+              <p className="text-xs text-red-500">
+                Please double-check your reference number from your confirmation screen.
               </p>
+            </div>
+          )}
+
+          {error && (
+            <div className="rounded-md bg-destructive/10 border border-destructive/30 p-3 text-sm text-destructive">
+              {error}
             </div>
           )}
 
