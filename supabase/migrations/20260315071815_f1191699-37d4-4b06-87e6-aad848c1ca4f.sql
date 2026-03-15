@@ -1,0 +1,1 @@
+ALTER TABLE public.tickets ADD COLUMN IF NOT EXISTS share_contact_with_vendor boolean NOT NULL DEFAULT false;

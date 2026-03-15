@@ -386,6 +386,7 @@ export type Database = {
           is_archived: boolean
           issue_type: string
           priority: string
+          share_contact_with_vendor: boolean
           short_id: string | null
           source: string | null
           status: string
@@ -406,6 +407,7 @@ export type Database = {
           is_archived?: boolean
           issue_type?: string
           priority?: string
+          share_contact_with_vendor?: boolean
           short_id?: string | null
           source?: string | null
           status?: string
@@ -426,6 +428,7 @@ export type Database = {
           is_archived?: boolean
           issue_type?: string
           priority?: string
+          share_contact_with_vendor?: boolean
           short_id?: string | null
           source?: string | null
           status?: string
