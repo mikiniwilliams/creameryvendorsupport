@@ -264,6 +264,38 @@ const TicketDetail = () => {
                   <span className="text-xs text-muted-foreground">from <span className="font-medium text-foreground">{ticket.customer_name}</span></span>
                 )}
               </div>
+
+              {/* Customer Information — vendor view */}
+              {role === "vendor" && (
+                <div className="border-t pt-3 space-y-2">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1">
+                    <User className="h-3 w-3" /> Customer Information
+                  </p>
+                  {ticket.customer_name && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <User className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span>{ticket.customer_name}</span>
+                    </div>
+                  )}
+                  {ticket.description && ticket.description.includes("Transaction Date:") && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span>{ticket.description.match(/Transaction Date:\s*(.+)/)?.[1]?.split("\n")[0]}</span>
+                    </div>
+                  )}
+                  {(ticket as any).share_contact_with_vendor && ticket.customer_email ? (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Mail className="h-3.5 w-3.5 text-muted-foreground" />
+                      <a href={`mailto:${ticket.customer_email}`} className="text-primary hover:underline">{ticket.customer_email}</a>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground italic flex items-center gap-1.5">
+                      <Mail className="h-3 w-3" /> Contact email not shared — respond via this ticket thread
+                    </p>
+                  )}
+                </div>
+              )}
+
               {ticket.description && (
                 <div>
                   <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1 flex items-center gap-1">
