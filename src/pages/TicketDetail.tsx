@@ -135,10 +135,10 @@ const TicketDetail = () => {
     const oldTitle = ticket?.title || "";
     const { error } = await supabase.from("tickets").update({ title: editTitleValue.trim() }).eq("id", id);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
-    // Log activity
-    await supabase.from("ticket_activity").insert({
-      ticket_id: id, user_id: user?.id, activity_type: "title_updated",
-      old_value: oldTitle, new_value: editTitleValue.trim()
+    // Log activity via RPC (bypasses RLS deny on direct insert)
+    await supabase.rpc("log_ticket_edit", {
+      _ticket_id: id, _activity_type: "title_updated",
+      _old_value: oldTitle, _new_value: editTitleValue.trim()
     });
     setTicket(prev => prev ? { ...prev, title: editTitleValue.trim() } : prev);
     setEditingTitle(false);
