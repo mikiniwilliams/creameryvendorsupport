@@ -35,6 +35,7 @@ const SubmitRequest = () => {
   const [issueType, setIssueType] = useState("");
   const [description, setDescription] = useState("");
   const [resolution, setResolution] = useState("");
+  const [honeypot, setHoneypot] = useState("");
 
   const resetForm = () => {
     setName(""); setEmail(""); setTransactionDate(undefined);
