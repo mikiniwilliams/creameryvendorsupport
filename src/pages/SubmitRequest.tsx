@@ -36,6 +36,7 @@ const SubmitRequest = () => {
   const [description, setDescription] = useState("");
   const [resolution, setResolution] = useState("");
   const [honeypot, setHoneypot] = useState("");
+  const formLoadTime = useRef(Date.now());
 
   const resetForm = () => {
     setName(""); setEmail(""); setTransactionDate(undefined);
