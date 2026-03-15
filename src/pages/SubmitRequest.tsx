@@ -106,6 +106,20 @@ const SubmitRequest = () => {
     setTicketRef(refId);
     setView("success");
     setLoading(false);
+
+    // Fire-and-forget: send admin notification email
+    supabase.functions.invoke("send-transactional-email", {
+      body: {
+        customerName: name.trim(),
+        customerEmail: email.trim(),
+        vendorName: vendorName.trim(),
+        issueType,
+        description: description.trim(),
+        ticketRef: refId,
+      },
+    }).catch(() => {
+      // Email notification is best-effort; don't block user flow
+    });
   };
 
   if (view === "lookup") {
