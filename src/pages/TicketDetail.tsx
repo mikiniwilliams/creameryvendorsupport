@@ -428,22 +428,23 @@ const TicketDetail = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                {/* Share contact toggle */}
-                {ticket.customer_email && (
-                  <div className="space-y-1">
-                    <label className="text-xs font-medium text-muted-foreground flex items-center gap-1"><Mail className="h-3 w-3" /> Share Contact</label>
-                    <div className="flex items-center gap-2">
-                      <Switch
-                        checked={!!(ticket as any).share_contact_with_vendor}
-                        onCheckedChange={(checked) => updateTicket("share_contact_with_vendor", checked as any)}
-                      />
-                      <span className="text-xs text-muted-foreground">Share email with vendor</span>
-                    </div>
-                    <p className="text-[10px] text-muted-foreground flex items-center gap-1 mt-1">
-                      <Info className="h-3 w-3 shrink-0" /> Enable this to allow the vendor to contact the customer directly, e.g. for refunds or replacements.
-                    </p>
-                  </div>
-                )}
+              </div>
+            )}
+
+            {/* Share contact toggle — separate section */}
+            {role === "admin" && ticket.customer_email && (
+              <div className="rounded-lg p-3" style={{ background: "#f9f6ef", borderRadius: "8px", padding: "12px" }}>
+                <label className="text-xs font-medium text-muted-foreground flex items-center gap-1 mb-2"><Mail className="h-3 w-3" /> Share Customer Email with Vendor</label>
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={!!(ticket as any).share_contact_with_vendor}
+                    onCheckedChange={(checked) => updateTicket("share_contact_with_vendor", checked as any)}
+                  />
+                  <span className="text-sm">Share email with vendor</span>
+                </div>
+                <p className="text-[10px] text-muted-foreground flex items-center gap-1 mt-2">
+                  <Info className="h-3 w-3 shrink-0" /> Enable this to allow the vendor to contact the customer directly, e.g. for refunds or replacements.
+                </p>
               </div>
             )}
 

@@ -108,7 +108,7 @@ const ActivityTimeline = ({ ticketId, userRole }: { ticketId: string; userRole?:
   const getUserName = (userId: string | null) => {
     if (!userId) return "System";
     const p = profiles[userId];
-    return p?.full_name || "User";
+    return p?.full_name || p?.email?.split("@")[0] || "Team Member";
   };
 
   if (loading) {
