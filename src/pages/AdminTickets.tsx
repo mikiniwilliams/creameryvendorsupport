@@ -7,20 +7,15 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Ticket, Search, Download, Clock, Flame } from "lucide-react";
+import { Ticket, Search, Download, Clock, Flame, Archive } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 interface TicketRow {
-  id: string;
-  title: string;
-  status: string;
-  priority: string;
-  issue_type: string;
-  vendor_id: string;
-  assigned_to: string | null;
-  created_at: string;
-  source?: string;
+  id: string; title: string; status: string; priority: string;
+  issue_type: string; vendor_id: string; assigned_to: string | null;
+  created_at: string; source?: string;
 }
-
 interface Vendor { id: string; name: string; }
 interface AdminUser { user_id: string; full_name: string | null; email: string | null; }
 
@@ -46,7 +41,13 @@ const TicketAgeIndicator = ({ age }: { age: string | null }) => {
   );
 };
 
+const priorityLeftClass = (priority: string, status: string) => {
+  if (status === "resolved" || status === "closed") return "priority-left-resolved";
+  return `priority-left-${priority}`;
+};
+
 const AdminTickets = () => {
+  const { toast } = useToast();
   const [tickets, setTickets] = useState<TicketRow[]>([]);
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [admins, setAdmins] = useState<AdminUser[]>([]);
@@ -56,25 +57,25 @@ const AdminTickets = () => {
   const [filterVendor, setFilterVendor] = useState("all");
   const [filterType, setFilterType] = useState("all");
   const [search, setSearch] = useState("");
+  const [archivingId, setArchivingId] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const [ticketsRes, vendorsRes, adminRolesRes] = await Promise.all([
-        supabase.from("tickets").select("*").order("created_at", { ascending: false }),
-        supabase.from("vendors").select("id, name").order("name"),
-        supabase.from("user_roles").select("user_id").eq("role", "admin"),
-      ]);
-      if (ticketsRes.data) setTickets(ticketsRes.data as TicketRow[]);
-      if (vendorsRes.data) setVendors(vendorsRes.data as Vendor[]);
-      if (adminRolesRes.data && adminRolesRes.data.length > 0) {
-        const ids = adminRolesRes.data.map((r: any) => r.user_id);
-        const { data: profiles } = await supabase.from("profiles").select("user_id, full_name, email").in("user_id", ids);
-        if (profiles) setAdmins(profiles as AdminUser[]);
-      }
-      setLoading(false);
-    };
-    fetchData();
-  }, []);
+  const fetchData = async () => {
+    const [ticketsRes, vendorsRes, adminRolesRes] = await Promise.all([
+      supabase.from("tickets").select("*").eq("is_archived", false).order("created_at", { ascending: false }),
+      supabase.from("vendors").select("id, name").order("name"),
+      supabase.from("user_roles").select("user_id").eq("role", "admin"),
+    ]);
+    if (ticketsRes.data) setTickets(ticketsRes.data as TicketRow[]);
+    if (vendorsRes.data) setVendors(vendorsRes.data as Vendor[]);
+    if (adminRolesRes.data && adminRolesRes.data.length > 0) {
+      const ids = adminRolesRes.data.map((r: any) => r.user_id);
+      const { data: profiles } = await supabase.from("profiles").select("user_id, full_name, email").in("user_id", ids);
+      if (profiles) setAdmins(profiles as AdminUser[]);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchData(); }, []);
 
   const getVendorName = (id: string) => vendors.find(v => v.id === id)?.name || "Unknown";
   const getAssignedName = (id: string | null) => {
@@ -94,25 +95,50 @@ const AdminTickets = () => {
 
   const formatStatus = (s: string) => s.replace(/_/g, " ");
 
+  const handleArchive = async (ticketId: string) => {
+    setArchivingId(ticketId);
+    const { data: { user } } = await supabase.auth.getUser();
+    const { error } = await supabase.from("tickets").update({
+      is_archived: true, archived_at: new Date().toISOString(), archived_by: user?.id
+    }).eq("id", ticketId);
+
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      setArchivingId(null);
+      return;
+    }
+
+    // Fade out animation delay
+    setTimeout(() => {
+      setTickets(prev => prev.filter(t => t.id !== ticketId));
+      setArchivingId(null);
+      toast({
+        title: "Ticket archived",
+        description: "Undo",
+        action: (
+          <Button variant="outline" size="sm" className="h-7 text-xs" onClick={async () => {
+            await supabase.from("tickets").update({ is_archived: false, archived_at: null, archived_by: null }).eq("id", ticketId);
+            fetchData();
+            toast({ title: "Ticket restored" });
+          }}>Undo</Button>
+        ),
+      });
+    }, 300);
+  };
+
   const exportCsv = () => {
     const headers = ["Title", "Vendor", "Type", "Status", "Priority", "Assigned To", "Created"];
     const escape = (v: string) => `"${v.replace(/"/g, '""')}"`;
     const rows = filtered.map(t => [
-      escape(t.title),
-      escape(getVendorName(t.vendor_id)),
-      escape(t.issue_type),
-      escape(t.status),
-      escape(t.priority),
-      escape(getAssignedName(t.assigned_to)),
+      escape(t.title), escape(getVendorName(t.vendor_id)), escape(t.issue_type),
+      escape(t.status), escape(t.priority), escape(getAssignedName(t.assigned_to)),
       escape(new Date(t.created_at).toLocaleDateString()),
     ].join(","));
     const csv = [headers.join(","), ...rows].join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = url;
-    a.download = `tickets-export-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
+    a.href = url; a.download = `tickets-export-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
     URL.revokeObjectURL(url);
   };
 
@@ -198,11 +224,12 @@ const AdminTickets = () => {
                       <th className="pb-3 font-medium text-muted-foreground">Assigned</th>
                       <th className="pb-3 font-medium text-muted-foreground">Age</th>
                       <th className="pb-3 font-medium text-muted-foreground">Date</th>
+                      <th className="pb-3 font-medium text-muted-foreground w-10"></th>
                     </tr>
                   </thead>
                   <tbody>
                     {filtered.map(t => (
-                      <tr key={t.id} className={`border-b last:border-0 hover:bg-muted/50 priority-left-${t.priority}`}>
+                      <tr key={t.id} className={`border-b last:border-0 hover:bg-muted/50 ${priorityLeftClass(t.priority, t.status)} ${archivingId === t.id ? "animate-fade-out" : ""}`}>
                         <td className="py-3 pr-4">
                           <Link to={`/tickets/${t.id}`} className="text-primary hover:underline font-medium">{t.title}</Link>
                         </td>
@@ -219,7 +246,21 @@ const AdminTickets = () => {
                         <td className="py-3 pr-4"><Badge variant="outline" className={`priority-badge-${t.priority} text-xs`}>{t.priority}</Badge></td>
                         <td className="py-3 pr-4 text-muted-foreground text-xs">{getAssignedName(t.assigned_to)}</td>
                         <td className="py-3 pr-4"><TicketAgeIndicator age={getTicketAge(t.created_at, t.status)} /></td>
-                        <td className="py-3 text-muted-foreground text-xs">{new Date(t.created_at).toLocaleDateString()}</td>
+                        <td className="py-3 pr-2 text-muted-foreground text-xs">{new Date(t.created_at).toLocaleDateString()}</td>
+                        <td className="py-3">
+                          <ConfirmDialog
+                            trigger={
+                              <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" title="Archive ticket">
+                                <Archive className="h-3.5 w-3.5" />
+                              </Button>
+                            }
+                            title="Archive this ticket?"
+                            description="This ticket will be hidden from all views but preserved in your records. You can restore it anytime from the Archived Tickets section. No data will be deleted."
+                            confirmLabel="Archive Ticket"
+                            variant="default"
+                            onConfirm={() => handleArchive(t.id)}
+                          />
+                        </td>
                       </tr>
                     ))}
                   </tbody>

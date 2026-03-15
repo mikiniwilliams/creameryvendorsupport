@@ -128,19 +128,26 @@
   .status-badge-disabled { background-color: #FCEBEB; color: #A32D2D; border: none; }
   .status-badge-open { background-color: #E6F1FB; color: #185FA5; border: none; }
   .status-badge-in_progress { background-color: #EEEDFE; color: #534AB7; border: none; }
-  .status-badge-pending_vendor_response { background-color: #EEEDFE; color: #534AB7; border: none; }
-  .status-badge-resolved { background-color: #EAF3DE; color: #3B6D11; border: none; }
+  .status-badge-pending_vendor_response { background-color: #FBF0FF; color: #6A1B9A; border: none; }
+  .status-badge-resolved { background-color: #E8F5E9; color: #2E7D32; border: none; }
   .status-badge-closed { background-color: #EAF3DE; color: #3B6D11; border: none; }
   .priority-badge-low { background-color: #E6F1FB; color: #185FA5; border: none; }
   .priority-badge-medium { background-color: #FAEEDA; color: #854F0B; border: none; }
   .priority-badge-high { background-color: #FCEBEB; color: #A32D2D; border: none; }
   .priority-badge-urgent { background-color: #FCEBEB; color: #A32D2D; border: none; }
-  .type-badge-general { background-color: #F3F2EF; color: #5C5A55; border: none; }
-  .type-badge-bug { background-color: #FCEBEB; color: #A32D2D; border: none; }
-  .type-badge-technical { background-color: #EEEDFE; color: #534AB7; border: none; }
-  .type-badge-billing { background-color: #FAEEDA; color: #854F0B; border: none; }
+  .type-badge-general { background-color: #F1EFE8; color: #5F5E5A; border: none; }
+  .type-badge-bug { background-color: #F1EFE8; color: #5F5E5A; border: none; }
+  .type-badge-technical { background-color: #F1EFE8; color: #5F5E5A; border: none; }
+  .type-badge-billing { background-color: #F1EFE8; color: #5F5E5A; border: none; }
   .priority-left-low { border-left: 3px solid #378ADD; }
   .priority-left-medium { border-left: 3px solid #E8A020; }
   .priority-left-high { border-left: 3px solid #E24B4A; }
   .priority-left-urgent { border-left: 3px solid #E24B4A; }
+  .priority-left-resolved { border-left: 3px solid #1D9E75; }
+  .priority-left-closed { border-left: 3px solid #1D9E75; }
+  .animate-fade-out { animation: fadeOut 0.3s ease-out forwards; }
+  @keyframes fadeOut {
+    from { opacity: 1; transform: translateY(0); }
+    to { opacity: 0; transform: translateY(-4px); }
+  }
 }

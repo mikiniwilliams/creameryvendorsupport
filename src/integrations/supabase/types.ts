@@ -374,6 +374,8 @@ export type Database = {
       }
       tickets: {
         Row: {
+          archived_at: string | null
+          archived_by: string | null
           assigned_to: string | null
           created_at: string
           created_by: string
@@ -381,6 +383,7 @@ export type Database = {
           customer_name: string | null
           description: string | null
           id: string
+          is_archived: boolean
           issue_type: string
           priority: string
           source: string | null
@@ -390,6 +393,8 @@ export type Database = {
           vendor_id: string
         }
         Insert: {
+          archived_at?: string | null
+          archived_by?: string | null
           assigned_to?: string | null
           created_at?: string
           created_by: string
@@ -397,6 +402,7 @@ export type Database = {
           customer_name?: string | null
           description?: string | null
           id?: string
+          is_archived?: boolean
           issue_type?: string
           priority?: string
           source?: string | null
@@ -406,6 +412,8 @@ export type Database = {
           vendor_id: string
         }
         Update: {
+          archived_at?: string | null
+          archived_by?: string | null
           assigned_to?: string | null
           created_at?: string
           created_by?: string
@@ -413,6 +421,7 @@ export type Database = {
           customer_name?: string | null
           description?: string | null
           id?: string
+          is_archived?: boolean
           issue_type?: string
           priority?: string
           source?: string | null

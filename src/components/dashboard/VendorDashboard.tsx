@@ -48,6 +48,7 @@ const VendorDashboard = () => {
     const { data } = await supabase
       .from("tickets")
       .select("*")
+      .eq("is_archived", false)
       .order("updated_at", { ascending: false });
     if (data) setTickets(data);
     setLoading(false);
@@ -56,21 +57,13 @@ const VendorDashboard = () => {
   useEffect(() => { fetchTickets(); }, []);
 
   const fetchPreviewComments = useCallback(async (ticketId: string) => {
-    const { data } = await supabase
-      .from("comments")
-      .select("*")
-      .eq("ticket_id", ticketId)
-      .order("created_at", { ascending: false })
-      .limit(3);
+    const { data } = await supabase.from("comments").select("*").eq("ticket_id", ticketId).order("created_at", { ascending: false }).limit(3);
     if (data) setPreviewComments(data);
   }, []);
 
   const handleCardHover = useCallback((ticket: any) => {
     if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
-    hoverTimerRef.current = setTimeout(() => {
-      setPreviewTicket(ticket);
-      fetchPreviewComments(ticket.id);
-    }, 300);
+    hoverTimerRef.current = setTimeout(() => { setPreviewTicket(ticket); fetchPreviewComments(ticket.id); }, 300);
   }, [fetchPreviewComments]);
 
   const handleCardLeave = useCallback(() => {
@@ -96,38 +89,19 @@ const VendorDashboard = () => {
     });
 
   const handleQuickStatus = async (ticketId: string, newStatus: string, e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+    e.preventDefault(); e.stopPropagation();
     const { error } = await supabase.from("tickets").update({ status: newStatus }).eq("id", ticketId);
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Status updated", description: `Ticket moved to ${newStatus.replace(/_/g, " ")}` });
-      fetchTickets();
-      if (previewTicket?.id === ticketId) {
-        setPreviewTicket({ ...previewTicket, status: newStatus });
-      }
-    }
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); }
+    else { toast({ title: "Status updated", description: `Ticket moved to ${newStatus.replace(/_/g, " ")}` }); fetchTickets(); if (previewTicket?.id === ticketId) setPreviewTicket({ ...previewTicket, status: newStatus }); }
   };
 
-  const toggleSort = (key: SortKey) => {
-    if (sortBy === key) setSortAsc(!sortAsc);
-    else { setSortBy(key); setSortAsc(false); }
-  };
-
-  const daysSince = (date: string) => {
-    const diff = Date.now() - new Date(date).getTime();
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    if (days === 0) return "Today";
-    if (days === 1) return "1 day ago";
-    return `${days} days ago`;
-  };
+  const toggleSort = (key: SortKey) => { if (sortBy === key) setSortAsc(!sortAsc); else { setSortBy(key); setSortAsc(false); } };
+  const daysSince = (date: string) => { const days = Math.floor((Date.now() - new Date(date).getTime()) / (1000 * 60 * 60 * 24)); if (days === 0) return "Today"; if (days === 1) return "1 day ago"; return `${days} days ago`; };
 
   return (
     <div className="animate-fade-in space-y-6 relative">
       <h1 className="text-2xl font-bold">My Tickets</h1>
 
-      {/* Summary cards */}
       <div className="grid gap-4 sm:grid-cols-3">
         <Card><CardContent className="flex items-center gap-4 p-5">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10"><Ticket className="h-5 w-5 text-primary" /></div>
@@ -143,16 +117,10 @@ const VendorDashboard = () => {
         </CardContent></Card>
       </div>
 
-      {/* Search & Filters */}
       <div className="flex flex-wrap gap-3 items-center">
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search tickets..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="pl-9 h-9 text-sm"
-          />
+          <Input placeholder="Search tickets..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 h-9 text-sm" />
         </div>
         <Select value={filterStatus} onValueChange={setFilterStatus}>
           <SelectTrigger className="w-[150px] h-9 text-xs"><SelectValue placeholder="Status" /></SelectTrigger>
@@ -177,13 +145,7 @@ const VendorDashboard = () => {
         </Select>
         <div className="flex gap-1">
           {(["updated_at", "created_at", "priority", "status"] as SortKey[]).map(key => (
-            <Button
-              key={key}
-              variant={sortBy === key ? "secondary" : "ghost"}
-              size="sm"
-              className="h-9 text-xs gap-1"
-              onClick={() => toggleSort(key)}
-            >
+            <Button key={key} variant={sortBy === key ? "secondary" : "ghost"} size="sm" className="h-9 text-xs gap-1" onClick={() => toggleSort(key)}>
               <ArrowUpDown className="h-3 w-3" />
               {key === "updated_at" ? "Updated" : key === "created_at" ? "Created" : key === "priority" ? "Priority" : "Status"}
             </Button>
@@ -191,9 +153,7 @@ const VendorDashboard = () => {
         </div>
       </div>
 
-      {/* Main content area with preview panel */}
       <div className="flex gap-4">
-        {/* Ticket cards */}
         <div className={`transition-all duration-300 ${previewTicket ? "flex-1 min-w-0" : "w-full"}`}>
           {loading ? (
             <div className="flex justify-center py-12"><div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" /></div>
@@ -209,54 +169,23 @@ const VendorDashboard = () => {
                 const canStart = t.status === "open" || t.status === "pending_vendor_response";
                 const canResolve = t.status === "in_progress";
                 const isSelected = previewTicket?.id === t.id;
-
                 return (
-                  <Link
-                    key={t.id}
-                    to={`/tickets/${t.id}`}
-                    className="group"
-                    onMouseEnter={() => handleCardHover(t)}
-                    onMouseLeave={handleCardLeave}
-                  >
+                  <Link key={t.id} to={`/tickets/${t.id}`} className="group" onMouseEnter={() => handleCardHover(t)} onMouseLeave={handleCardLeave}>
                     <Card className={`transition-all hover:shadow-md h-full ${isSelected ? "border-primary shadow-md ring-1 ring-primary/20" : "hover:border-primary/30"}`}>
                       <CardContent className="p-4 space-y-3">
                         <div className="flex items-start justify-between gap-2">
-                          <h3 className="font-medium text-sm leading-tight group-hover:text-primary transition-colors line-clamp-2">
-                            {t.title}
-                          </h3>
-                          <Badge variant="outline" className={`${priorityConfig[t.priority] || ""} text-[10px] capitalize shrink-0`}>
-                            {t.priority}
-                          </Badge>
+                          <h3 className="font-medium text-sm leading-tight group-hover:text-primary transition-colors line-clamp-2">{t.title}</h3>
+                          <Badge variant="outline" className={`${priorityConfig[t.priority] || ""} text-[10px] capitalize shrink-0`}>{t.priority}</Badge>
                         </div>
-
-                        {!previewTicket && t.description && (
-                          <p className="text-xs text-muted-foreground line-clamp-2">{t.description}</p>
-                        )}
-
+                        {!previewTicket && t.description && <p className="text-xs text-muted-foreground line-clamp-2">{t.description}</p>}
                         <div className="flex items-center justify-between gap-2">
-                          <Badge variant="outline" className={`${sc.class} text-[10px] capitalize`}>
-                            {sc.label}
-                          </Badge>
-                          <div className="text-[10px] text-muted-foreground text-right">
-                            <span>Updated {daysSince(t.updated_at)}</span>
-                          </div>
+                          <Badge variant="outline" className={`${sc.class} text-[10px] capitalize`}>{sc.label}</Badge>
+                          <div className="text-[10px] text-muted-foreground text-right"><span>Updated {daysSince(t.updated_at)}</span></div>
                         </div>
-
                         {(canStart || canResolve) && (
                           <div className="flex gap-2 pt-1">
-                            {canStart && (
-                              <Button variant="outline" size="sm" className="h-7 text-xs gap-1 flex-1"
-                                onClick={(e) => handleQuickStatus(t.id, "in_progress", e)}>
-                                <Play className="h-3 w-3" /> Start Working
-                              </Button>
-                            )}
-                            {canResolve && (
-                              <Button variant="outline" size="sm"
-                                className="h-7 text-xs gap-1 flex-1 text-emerald-600 border-emerald-200 hover:bg-emerald-50"
-                                onClick={(e) => handleQuickStatus(t.id, "resolved", e)}>
-                                <CheckCheck className="h-3 w-3" /> Mark Resolved
-                              </Button>
-                            )}
+                            {canStart && <Button variant="outline" size="sm" className="h-7 text-xs gap-1 flex-1" onClick={(e) => handleQuickStatus(t.id, "in_progress", e)}><Play className="h-3 w-3" /> Start Working</Button>}
+                            {canResolve && <Button variant="outline" size="sm" className="h-7 text-xs gap-1 flex-1 text-emerald-600 border-emerald-200 hover:bg-emerald-50" onClick={(e) => handleQuickStatus(t.id, "resolved", e)}><CheckCheck className="h-3 w-3" /> Mark Resolved</Button>}
                           </div>
                         )}
                       </CardContent>
@@ -268,90 +197,31 @@ const VendorDashboard = () => {
           )}
         </div>
 
-        {/* Preview Panel */}
         {previewTicket && (
           <div className="w-[320px] shrink-0 animate-slide-in-right">
             <Card className="sticky top-20 border-primary/20 shadow-lg">
               <CardContent className="p-0">
-                {/* Panel header */}
                 <div className="flex items-center justify-between p-4 pb-3">
                   <h3 className="font-semibold text-sm truncate pr-2">Preview</h3>
-                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setPreviewTicket(null)}>
-                    <X className="h-3.5 w-3.5" />
-                  </Button>
+                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setPreviewTicket(null)}><X className="h-3.5 w-3.5" /></Button>
                 </div>
-
                 <Separator />
-
-                {/* Ticket info */}
                 <div className="p-4 space-y-4">
                   <h4 className="font-medium text-sm leading-tight">{previewTicket.title}</h4>
-
                   <div className="flex gap-2">
-                    <Badge variant="outline" className={`${statusConfig[previewTicket.status]?.class || ""} text-[10px] capitalize`}>
-                      {statusConfig[previewTicket.status]?.label || previewTicket.status}
-                    </Badge>
-                    <Badge variant="outline" className={`${priorityConfig[previewTicket.priority] || ""} text-[10px] capitalize`}>
-                      {previewTicket.priority}
-                    </Badge>
+                    <Badge variant="outline" className={`${statusConfig[previewTicket.status]?.class || ""} text-[10px] capitalize`}>{statusConfig[previewTicket.status]?.label || previewTicket.status}</Badge>
+                    <Badge variant="outline" className={`${priorityConfig[previewTicket.priority] || ""} text-[10px] capitalize`}>{previewTicket.priority}</Badge>
                   </div>
-
-                  {previewTicket.description && (
-                    <>
-                      <Separator />
-                      <div>
-                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1.5">Description</p>
-                        <p className="text-xs text-muted-foreground leading-relaxed">{previewTicket.description}</p>
-                      </div>
-                    </>
-                  )}
-
+                  {previewTicket.description && (<><Separator /><div><p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1.5">Description</p><p className="text-xs text-muted-foreground leading-relaxed">{previewTicket.description}</p></div></>)}
                   <Separator />
-
-                  {/* Dates */}
                   <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Calendar className="h-3 w-3 shrink-0" />
-                      <span>Created: {new Date(previewTicket.created_at).toLocaleDateString()}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Clock className="h-3 w-3 shrink-0" />
-                      <span>Updated: {daysSince(previewTicket.updated_at)}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <AlertCircle className="h-3 w-3 shrink-0" />
-                      <span>Type: <span className="capitalize">{previewTicket.issue_type}</span></span>
-                    </div>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground"><Calendar className="h-3 w-3 shrink-0" /><span>Created: {new Date(previewTicket.created_at).toLocaleDateString()}</span></div>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground"><Clock className="h-3 w-3 shrink-0" /><span>Updated: {daysSince(previewTicket.updated_at)}</span></div>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground"><AlertCircle className="h-3 w-3 shrink-0" /><span>Type: <span className="capitalize">{previewTicket.issue_type}</span></span></div>
                   </div>
-
-                  {/* Recent comments */}
-                  {previewComments.length > 0 && (
-                    <>
-                      <Separator />
-                      <div>
-                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-2">
-                          Recent Comments ({previewComments.length})
-                        </p>
-                        <div className="space-y-2">
-                          {previewComments.map(c => (
-                            <div key={c.id} className="rounded-md bg-muted/50 p-2">
-                              <p className="text-xs text-foreground line-clamp-2">{c.content}</p>
-                              <p className="text-[10px] text-muted-foreground mt-1">{daysSince(c.created_at)}</p>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </>
-                  )}
-
+                  {previewComments.length > 0 && (<><Separator /><div><p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-2">Recent Comments ({previewComments.length})</p><div className="space-y-2">{previewComments.map(c => (<div key={c.id} className="rounded-md bg-muted/50 p-2"><p className="text-xs text-foreground line-clamp-2">{c.content}</p><p className="text-[10px] text-muted-foreground mt-1">{daysSince(c.created_at)}</p></div>))}</div></div></>)}
                   <Separator />
-
-                  {/* Open full detail */}
-                  <Link to={`/tickets/${previewTicket.id}`}>
-                    <Button variant="default" size="sm" className="w-full gap-1.5 text-xs">
-                      <ExternalLink className="h-3 w-3" /> Open Full Detail
-                    </Button>
-                  </Link>
+                  <Link to={`/tickets/${previewTicket.id}`}><Button variant="default" size="sm" className="w-full gap-1.5 text-xs"><ExternalLink className="h-3 w-3" /> Open Full Detail</Button></Link>
                 </div>
               </CardContent>
             </Card>
