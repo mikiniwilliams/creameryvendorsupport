@@ -55,6 +55,13 @@ const SubmitRequest = () => {
       return;
     }
 
+    // Timing check — reject submissions faster than 3 seconds (bot behavior)
+    if (Date.now() - formLoadTime.current < 3000) {
+      setView("success");
+      setTicketRef("000000");
+      return;
+    }
+
     if (!name.trim() || !email.trim() || !vendorName.trim() || !issueType || !description.trim()) {
       setError("Please fill in all required fields.");
       return;
