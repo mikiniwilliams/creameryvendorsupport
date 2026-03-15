@@ -126,7 +126,7 @@ const TicketDetail = () => {
     else { setTicket(prev => prev ? { ...prev, vendor_id: newVendorId, assigned_to: null } : prev); toast({ title: "Vendor updated" }); fetchVendorUsers(newVendorId); }
   };
 
-  const updateTicket = async (field: string, value: string | null) => {
+  const updateTicket = async (field: string, value: string | boolean | null) => {
     if (!id) return;
     const { error } = await supabase.from("tickets").update({ [field]: value }).eq("id", id);
     if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
