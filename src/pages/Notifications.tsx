@@ -77,11 +77,11 @@ const Notifications = () => {
             <Bell className="h-6 w-6" /> Notifications
             {unreadCount > 0 && <Badge className="ml-1">{unreadCount}</Badge>}
           </h1>
-          {unreadCount > 0 && (
-            <Button variant="outline" size="sm" onClick={markAllRead} className="gap-2">
-              <CheckCheck className="h-4 w-4" /> Mark All Read
-            </Button>
-          )}
+           {unreadCount > 0 && (
+             <Button variant="ghost" size="sm" onClick={markAllRead} className="gap-2 font-medium" style={{ color: "#E8A020" }}>
+               <CheckCheck className="h-4 w-4" /> Mark All Read
+             </Button>
+           )}
         </div>
 
         <Card>
@@ -100,44 +100,50 @@ const Notifications = () => {
               </div>
             ) : (
               <div className="divide-y">
-                {notifications.map((n) => {
-                  const style = getNotifStyle(n.type);
-                  return (
-                    <div key={n.id} className={`flex items-start gap-3 p-4 ${!n.is_read ? "bg-primary/5" : ""} hover:bg-muted/50 transition-colors`}
-                      style={{ borderLeft: `3px solid ${style.border}` }}>
-                      <div className={`mt-0.5 h-2 w-2 rounded-full shrink-0 ${!n.is_read ? "bg-primary" : "bg-transparent"}`} />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium">{n.title}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">{n.message}</p>
-                        <div className="flex items-center gap-2 mt-1.5">
-                          <span className="text-[10px] text-muted-foreground">{new Date(n.created_at).toLocaleString()}</span>
-                          <Badge variant="outline" className={`${style.badgeClass} text-[10px] capitalize border-0`}>{style.badgeLabel}</Badge>
-                        </div>
-                      </div>
-                      <div className="flex gap-1 shrink-0">
-                        {n.ticket_id && (
-                          <Link to={`/tickets/${n.ticket_id}`}>
-                            <Button size="icon" variant="ghost" className="h-7 w-7" title="View Ticket" onClick={() => markRead(n.id)}>
-                              <Ticket className="h-3.5 w-3.5" />
-                            </Button>
-                          </Link>
-                        )}
-                        <ConfirmDialog
-                          trigger={
-                            <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive">
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
-                          }
-                          title="Delete notification?"
-                          description="This notification will be removed."
-                          confirmLabel="Delete"
-                          onConfirm={() => deleteNotification(n.id)}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+               {notifications.map((n) => {
+                   const style = getNotifStyle(n.type);
+                   return (
+                     <div key={n.id} className={`flex items-start gap-3 p-4 ${!n.is_read ? "bg-primary/5" : ""} hover:bg-muted/50 transition-colors`}
+                       style={{ borderLeft: `3px solid ${style.border}` }}>
+                       <div className={`mt-0.5 h-2 w-2 rounded-full shrink-0 ${!n.is_read ? "bg-primary" : "bg-transparent"}`} />
+                       <div className="flex-1 min-w-0">
+                         <p className="text-sm font-medium">{n.title}</p>
+                         <p className="text-xs text-muted-foreground mt-0.5">{n.message}</p>
+                         <div className="flex items-center gap-2 mt-1.5">
+                           <span className="text-[10px] text-muted-foreground">{new Date(n.created_at).toLocaleString()}</span>
+                           <Badge variant="outline" className={`${style.badgeClass} text-[10px] capitalize border-0`}>{style.badgeLabel}</Badge>
+                         </div>
+                       </div>
+                       <div className="flex gap-1 shrink-0">
+                         {n.ticket_id && (
+                           <Link to={`/tickets/${n.ticket_id}`}>
+                             <Button size="icon" variant="ghost" className="h-7 w-7" title="View Ticket" onClick={() => markRead(n.id)}>
+                               <Ticket className="h-3.5 w-3.5" />
+                             </Button>
+                           </Link>
+                         )}
+                         <ConfirmDialog
+                           trigger={
+                             <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive">
+                               <Trash2 className="h-3.5 w-3.5" />
+                             </Button>
+                           }
+                           title="Delete notification?"
+                           description="This notification will be removed."
+                           confirmLabel="Delete"
+                           onConfirm={() => deleteNotification(n.id)}
+                         />
+                       </div>
+                     </div>
+                   );
+                 })}
+                 {notifications.length > 0 && notifications.length <= 3 && (
+                   <div className="text-center py-8 px-6 border-t">
+                     <BellOff className="h-6 w-6 text-muted-foreground/30 mx-auto mb-2" />
+                     <p className="text-xs text-muted-foreground">All caught up! New notifications will appear here when tickets are assigned or updated.</p>
+                   </div>
+                 )}
+               </div>
             )}
           </CardContent>
         </Card>

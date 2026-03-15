@@ -102,13 +102,13 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
           <p className="text-white text-xs font-medium leading-tight">{profile?.full_name || "Vendor User"}</p>
           <p className="text-[10px] text-[#8a8070] mt-0.5">{vendorName || "Loading..."}</p>
           <div className="flex gap-2 mt-2">
-            <div className="flex-1 rounded-md bg-[#0f0a05] px-2 py-1.5 text-center">
-              <p className="text-xs font-medium text-white">{vendorStats.open}</p>
-              <p className="text-[9px] text-[#6b6156]">Open</p>
+            <div className="flex-1 rounded-md px-2 py-1.5 text-center" style={{ background: "rgba(232,160,32,0.1)" }}>
+              <p className="text-xs font-medium" style={{ color: "#E8A020" }}>{vendorStats.open}</p>
+              <p className="text-[9px] text-[#8a8070]">Open</p>
             </div>
-            <div className="flex-1 rounded-md bg-[#0f0a05] px-2 py-1.5 text-center">
-              <p className="text-xs font-medium text-white">{resolutionRate}%</p>
-              <p className="text-[9px] text-[#6b6156]">Resolved</p>
+            <div className="flex-1 rounded-md px-2 py-1.5 text-center" style={{ background: "rgba(232,160,32,0.1)" }}>
+              <p className="text-xs font-medium" style={{ color: "#E8A020" }}>{resolutionRate}%</p>
+              <p className="text-[9px] text-[#8a8070]">Resolved</p>
             </div>
           </div>
         </div>

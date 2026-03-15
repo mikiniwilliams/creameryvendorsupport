@@ -297,7 +297,7 @@ const TicketDetail = () => {
         </Card>
 
         {/* Activity Card - gray accent for vendor distinction */}
-        <Card style={role === "vendor" ? { borderLeftWidth: 3, borderLeftColor: "#d4d4d4", background: "#f9f9f7" } : {}}>
+        <Card style={role === "vendor" ? { borderLeftWidth: 3, borderLeftColor: "#d4d4d4", background: "#f8f7f5" } : {}}>
           <CardHeader><CardTitle className="text-lg flex items-center gap-2"><History className="h-4 w-4" /> Activity</CardTitle></CardHeader>
           <CardContent><ActivityTimeline ticketId={ticket.id} userRole={role} key={comments.length} /></CardContent>
         </Card>
