@@ -23,6 +23,7 @@ interface Ticket {
   priority: string; issue_type: string; vendor_id: string; created_by: string;
   assigned_to: string | null; created_at: string; updated_at: string;
   customer_name?: string | null; customer_email?: string | null; short_id?: string;
+  share_contact_with_vendor?: boolean;
 }
 
 const getShortId = (t: Ticket) => t.short_id || t.id.slice(-6).toUpperCase();
