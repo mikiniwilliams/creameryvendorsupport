@@ -203,6 +203,7 @@ const SubmitRequest = () => {
                   <Label htmlFor="email">Your Email Address <span className="text-destructive">*</span></Label>
                   <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="jane@email.com" maxLength={255} required />
                   <p className="text-xs italic text-muted-foreground">Your email is only used for follow-up and will never be shared.</p>
+                  <p className="text-xs italic text-muted-foreground">Your contact information may be shared with the vendor to help resolve your issue.</p>
                 </div>
               </div>
 
