@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { Ticket, Clock, CheckCircle, Search, ArrowUpDown, Play, CheckCheck, X, ExternalLink, Calendar, AlertCircle } from "lucide-react";
+import { Ticket, Clock, CheckCircle, Search, ArrowUpDown, Play, CheckCheck, X, ExternalLink, Calendar, AlertCircle, AlertTriangle } from "lucide-react";
 
 const statusConfig: Record<string, { label: string; class: string }> = {
   open: { label: "Open", class: "status-badge-open" },
@@ -24,6 +24,13 @@ const priorityConfig: Record<string, string> = {
   medium: "priority-badge-medium",
   high: "priority-badge-high",
   urgent: "priority-badge-urgent",
+};
+
+const priorityBorderColor: Record<string, string> = {
+  high: "#E24B4A",
+  urgent: "#E24B4A",
+  medium: "#E8A020",
+  low: "#378ADD",
 };
 
 type SortKey = "updated_at" | "created_at" | "priority" | "status";
@@ -73,6 +80,16 @@ const VendorDashboard = () => {
   const openCount = tickets.filter(t => ["open", "in_progress", "pending_vendor_response"].includes(t.status)).length;
   const resolvedCount = tickets.filter(t => t.status === "resolved" || t.status === "closed").length;
 
+  // Overdue tickets: open/in_progress for >72 hours without update
+  const overdueTickets = useMemo(() => {
+    const now = Date.now();
+    const SEVENTY_TWO_HOURS = 72 * 60 * 60 * 1000;
+    return tickets.filter(t =>
+      ["open", "in_progress"].includes(t.status) &&
+      (now - new Date(t.updated_at).getTime()) > SEVENTY_TWO_HOURS
+    );
+  }, [tickets]);
+
   const filtered = tickets
     .filter(t => {
       if (filterStatus !== "all" && t.status !== filterStatus) return false;
@@ -98,24 +115,59 @@ const VendorDashboard = () => {
   const toggleSort = (key: SortKey) => { if (sortBy === key) setSortAsc(!sortAsc); else { setSortBy(key); setSortAsc(false); } };
   const daysSince = (date: string) => { const days = Math.floor((Date.now() - new Date(date).getTime()) / (1000 * 60 * 60 * 24)); if (days === 0) return "Today"; if (days === 1) return "1 day ago"; return `${days} days ago`; };
 
+  const getCardBorderColor = (ticket: any) => {
+    if (ticket.status === "resolved" || ticket.status === "closed") return "#1D9E75";
+    return priorityBorderColor[ticket.priority] || "#378ADD";
+  };
+
   return (
     <div className="animate-fade-in space-y-6 relative">
       <h1 className="text-2xl font-bold">My Tickets</h1>
 
+      {/* KPI Cards with accent bars */}
       <div className="grid gap-4 sm:grid-cols-3">
-        <Card><CardContent className="flex items-center gap-4 p-5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10"><Ticket className="h-5 w-5 text-primary" /></div>
-          <div><p className="text-2xl font-bold">{tickets.length}</p><p className="text-xs text-muted-foreground">Total</p></div>
-        </CardContent></Card>
-        <Card><CardContent className="flex items-center gap-4 p-5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/50"><Clock className="h-5 w-5 text-primary" /></div>
-          <div><p className="text-2xl font-bold">{openCount}</p><p className="text-xs text-muted-foreground">Open</p></div>
-        </CardContent></Card>
-        <Card><CardContent className="flex items-center gap-4 p-5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/50"><CheckCircle className="h-5 w-5 text-primary" /></div>
-          <div><p className="text-2xl font-bold">{resolvedCount}</p><p className="text-xs text-muted-foreground">Resolved</p></div>
-        </CardContent></Card>
+        <Card className="overflow-hidden">
+          <div className="h-[2px] w-full" style={{ background: "#E8A020" }} />
+          <CardContent className="flex items-center gap-4 p-5">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full" style={{ background: "rgba(232,160,32,0.12)" }}>
+              <Ticket className="h-5 w-5" style={{ color: "#E8A020" }} />
+            </div>
+            <div><p className="text-2xl font-medium">{tickets.length}</p><p className="text-xs text-muted-foreground">Total</p></div>
+          </CardContent>
+        </Card>
+        <Card className="overflow-hidden">
+          <div className="h-[2px] w-full" style={{ background: "#378ADD" }} />
+          <CardContent className="flex items-center gap-4 p-5">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full" style={{ background: "rgba(55,138,221,0.12)" }}>
+              <Clock className="h-5 w-5" style={{ color: "#378ADD" }} />
+            </div>
+            <div><p className="text-2xl font-medium">{openCount}</p><p className="text-xs text-muted-foreground">Open</p></div>
+          </CardContent>
+        </Card>
+        <Card className="overflow-hidden">
+          <div className="h-[2px] w-full" style={{ background: "#1D9E75" }} />
+          <CardContent className="flex items-center gap-4 p-5">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full" style={{ background: "rgba(29,158,117,0.12)" }}>
+              <CheckCircle className="h-5 w-5" style={{ color: "#1D9E75" }} />
+            </div>
+            <div><p className="text-2xl font-medium">{resolvedCount}</p><p className="text-xs text-muted-foreground">Resolved</p></div>
+          </CardContent>
+        </Card>
       </div>
+
+      {/* Overdue Warning Banner */}
+      {overdueTickets.length > 0 && (
+        <div className="flex items-center gap-3 rounded-lg border px-4 py-3" style={{ background: "#FAEEDA", borderColor: "#E8A020" }}>
+          <AlertTriangle className="h-5 w-5 shrink-0" style={{ color: "#854F0B" }} />
+          <p className="flex-1 text-sm font-medium" style={{ color: "#854F0B" }}>
+            You have {overdueTickets.length} overdue ticket{overdueTickets.length > 1 ? "s" : ""} — please respond to avoid affecting your standing in The Creamery.
+          </p>
+          <Button size="sm" variant="outline" className="shrink-0 text-xs h-8" style={{ borderColor: "#E8A020", color: "#854F0B" }}
+            onClick={() => { setFilterStatus("all"); setSortBy("updated_at"); setSortAsc(true); }}>
+            View Overdue
+          </Button>
+        </div>
+      )}
 
       <div className="flex flex-wrap gap-3 items-center">
         <div className="relative flex-1 min-w-[200px]">
@@ -169,25 +221,36 @@ const VendorDashboard = () => {
                 const canStart = t.status === "open" || t.status === "pending_vendor_response";
                 const canResolve = t.status === "in_progress";
                 const isSelected = previewTicket?.id === t.id;
+                const borderColor = getCardBorderColor(t);
                 return (
                   <Link key={t.id} to={`/tickets/${t.id}`} className="group" onMouseEnter={() => handleCardHover(t)} onMouseLeave={handleCardLeave}>
-                    <Card className={`transition-all hover:shadow-md h-full ${isSelected ? "border-primary shadow-md ring-1 ring-primary/20" : "hover:border-primary/30"}`}>
-                      <CardContent className="p-4 space-y-3">
-                        <div className="flex items-start justify-between gap-2">
-                          <h3 className="font-medium text-sm leading-tight group-hover:text-primary transition-colors line-clamp-2">{t.title}</h3>
-                          <Badge variant="outline" className={`${priorityConfig[t.priority] || ""} text-[10px] capitalize shrink-0`}>{t.priority}</Badge>
-                        </div>
-                        {!previewTicket && t.description && <p className="text-xs text-muted-foreground line-clamp-2">{t.description}</p>}
-                        <div className="flex items-center justify-between gap-2">
-                          <Badge variant="outline" className={`${sc.class} text-[10px] capitalize`}>{sc.label}</Badge>
-                          <div className="text-[10px] text-muted-foreground text-right"><span>Updated {daysSince(t.updated_at)}</span></div>
-                        </div>
-                        {(canStart || canResolve) && (
-                          <div className="flex gap-2 pt-1">
-                            {canStart && <Button variant="outline" size="sm" className="h-7 text-xs gap-1 flex-1" onClick={(e) => handleQuickStatus(t.id, "in_progress", e)}><Play className="h-3 w-3" /> Start Working</Button>}
-                            {canResolve && <Button variant="outline" size="sm" className="h-7 text-xs gap-1 flex-1 text-emerald-600 border-emerald-200 hover:bg-emerald-50" onClick={(e) => handleQuickStatus(t.id, "resolved", e)}><CheckCheck className="h-3 w-3" /> Mark Resolved</Button>}
+                    <Card className={`transition-all hover:shadow-md h-full overflow-hidden ${isSelected ? "border-primary shadow-md ring-1 ring-primary/20" : "hover:border-primary/30"}`}>
+                      <CardContent className="p-0">
+                        <div className="flex h-full">
+                          <div className="w-[3px] shrink-0 rounded-l-lg" style={{ background: borderColor }} />
+                          <div className="p-4 space-y-3 flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-2">
+                              <h3 className="font-medium text-sm leading-tight group-hover:text-primary transition-colors line-clamp-2">{t.title}</h3>
+                              <Badge variant="outline" className={`${priorityConfig[t.priority] || ""} text-[10px] capitalize shrink-0`}>{t.priority}</Badge>
+                            </div>
+                            {!previewTicket && t.description && <p className="text-xs text-muted-foreground line-clamp-2">{t.description}</p>}
+                            <div className="flex items-center justify-between gap-2">
+                              <Badge variant="outline" className={`${sc.class} text-[10px] capitalize`}>{sc.label}</Badge>
+                              <div className="text-[11px] text-muted-foreground font-medium text-right">Updated {daysSince(t.updated_at)}</div>
+                            </div>
+                            {(canStart || canResolve) && (
+                              <div className="flex gap-2 pt-1">
+                                {canStart && <Button variant="outline" size="sm" className="h-7 text-xs gap-1 flex-1" onClick={(e) => handleQuickStatus(t.id, "in_progress", e)}><Play className="h-3 w-3" /> Start Working</Button>}
+                                {canResolve && (
+                                  <Button size="sm" className="h-7 text-xs gap-1 flex-1 text-[#18120a] font-medium" style={{ background: "#E8A020" }}
+                                    onClick={(e) => handleQuickStatus(t.id, "resolved", e)}>
+                                    <CheckCheck className="h-3 w-3" /> Mark Resolved
+                                  </Button>
+                                )}
+                              </div>
+                            )}
                           </div>
-                        )}
+                        </div>
                       </CardContent>
                     </Card>
                   </Link>

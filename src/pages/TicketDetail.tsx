@@ -11,13 +11,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Send, UserCheck, History, Pencil, Trash2, Check, X, Lock, Archive } from "lucide-react";
+import { ArrowLeft, Send, UserCheck, History, Pencil, Trash2, Check, X, Lock, Archive, AlertCircle } from "lucide-react";
 import ActivityTimeline from "@/components/ActivityTimeline";
 
 interface Ticket {
   id: string; title: string; description: string | null; status: string;
   priority: string; issue_type: string; vendor_id: string; created_by: string;
   assigned_to: string | null; created_at: string; updated_at: string;
+  customer_name?: string | null; customer_email?: string | null;
 }
 interface Comment { id: string; content: string; user_id: string; created_at: string; }
 interface InternalNote { id: string; content: string; user_id: string; created_at: string; }
@@ -172,6 +173,30 @@ const TicketDetail = () => {
       <div className="mx-auto max-w-3xl space-y-6">
         <Button variant="ghost" onClick={() => navigate(-1)} className="gap-2"><ArrowLeft className="h-4 w-4" /> Back</Button>
 
+        {/* Customer Context Card for Vendors */}
+        {role === "vendor" && (
+          <Card className="border-l-4" style={{ borderLeftColor: "#378ADD" }}>
+            <CardContent className="p-4 space-y-3">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Customer Request</p>
+              <div className="flex flex-wrap gap-2">
+                <Badge variant="outline" className={`type-badge-${ticket.issue_type} capitalize text-[10px]`}>{ticket.issue_type}</Badge>
+                <Badge variant="outline" className={`priority-badge-${ticket.priority} text-[10px] capitalize`}>{ticket.priority}</Badge>
+                {ticket.customer_name && (
+                  <span className="text-xs text-muted-foreground">from <span className="font-medium text-foreground">{ticket.customer_name}</span></span>
+                )}
+              </div>
+              {ticket.description && (
+                <div>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" /> What the customer wants resolved
+                  </p>
+                  <p className="text-sm text-foreground whitespace-pre-wrap bg-[#f9f9f7] rounded-md p-3 border">{ticket.description}</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         <Card>
           <CardHeader>
             <div className="flex items-start justify-between gap-4">
@@ -201,7 +226,7 @@ const TicketDetail = () => {
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
-            {ticket.description && (
+            {role === "admin" && ticket.description && (
               <div>
                 <h3 className="text-sm font-medium mb-2">Description</h3>
                 <p className="text-sm text-muted-foreground whitespace-pre-wrap">{ticket.description}</p>
@@ -255,27 +280,30 @@ const TicketDetail = () => {
             )}
 
             {role === "vendor" && (
-              <div className="flex flex-wrap gap-4 border-t pt-4">
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-muted-foreground">Update Status</label>
+              <div className="border-t pt-4">
+                <div className="rounded-lg border p-4" style={{ borderLeftWidth: 3, borderLeftColor: "#E8A020" }}>
+                  <label className="text-xs font-semibold text-foreground">Your Response Status</label>
                   <Select value={VENDOR_STATUSES.some(s => s.value === ticket.status) ? ticket.status : ""} onValueChange={(v) => updateTicket("status", v)}>
-                    <SelectTrigger className="w-[160px]"><SelectValue placeholder="Select status" /></SelectTrigger>
+                    <SelectTrigger className="w-[200px] mt-2"><SelectValue placeholder="Select status" /></SelectTrigger>
                     <SelectContent>
                       {VENDOR_STATUSES.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
                     </SelectContent>
                   </Select>
+                  <p className="text-[11px] text-muted-foreground mt-2">Keep this updated so the customer and admin know where things stand.</p>
                 </div>
               </div>
             )}
           </CardContent>
         </Card>
 
-        <Card>
+        {/* Activity Card - gray accent for vendor distinction */}
+        <Card style={role === "vendor" ? { borderLeftWidth: 3, borderLeftColor: "#d4d4d4", background: "#f9f9f7" } : {}}>
           <CardHeader><CardTitle className="text-lg flex items-center gap-2"><History className="h-4 w-4" /> Activity</CardTitle></CardHeader>
           <CardContent><ActivityTimeline ticketId={ticket.id} userRole={role} key={comments.length} /></CardContent>
         </Card>
 
-        <Card>
+        {/* Comments Card - gold accent for vendor */}
+        <Card style={role === "vendor" ? { borderLeftWidth: 3, borderLeftColor: "#E8A020" } : {}}>
           {role === "admin" ? (
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <CardHeader>
@@ -393,8 +421,16 @@ const TicketDetail = () => {
   function renderCommentInput() {
     return (
       <div className="flex gap-2 pt-2">
-        <Textarea value={newComment} onChange={(e) => setNewComment(e.target.value)} placeholder="Add a comment…" rows={2} className="flex-1" />
-        <Button onClick={addComment} disabled={submitting || !newComment.trim()} size="icon" className="shrink-0 self-end"><Send className="h-4 w-4" /></Button>
+        <Textarea
+          value={newComment}
+          onChange={(e) => setNewComment(e.target.value)}
+          placeholder={role === "vendor" ? "Add your response or update for the admin and customer..." : "Add a comment…"}
+          rows={2}
+          className="flex-1 focus:border-[#E8A020] focus:ring-[#E8A020]/20"
+        />
+        <Button onClick={addComment} disabled={submitting || !newComment.trim()} className="shrink-0 self-end gap-1.5 px-3">
+          <Send className="h-4 w-4" /> {role === "vendor" && "Send"}
+        </Button>
       </div>
     );
   }
