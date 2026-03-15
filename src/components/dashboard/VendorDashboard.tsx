@@ -244,6 +244,7 @@ const VendorDashboard = ({ onClosePreview }: VendorDashboardProps = {}) => {
                               </div>
                               <Badge variant="outline" className={`${priorityConfig[t.priority] || ""} text-[10px] capitalize shrink-0`}>{t.priority}</Badge>
                             </div>
+                            </div>
                             {!previewTicket && t.description && <p className="text-xs text-muted-foreground line-clamp-2">{t.description}</p>}
                             <div className="flex items-center justify-between gap-2">
                               <Badge variant="outline" className={`${sc.class} text-[10px] capitalize`}>{sc.label}</Badge>
