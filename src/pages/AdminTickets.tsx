@@ -214,7 +214,7 @@ const AdminTickets = () => {
                           )}
                         </td>
                         <td className="py-3 pr-4 text-muted-foreground">{getVendorName(t.vendor_id)}</td>
-                        <td className="py-3 pr-4"><Badge variant="outline" className="text-xs capitalize">{t.issue_type}</Badge></td>
+                        <td className="py-3 pr-4"><Badge variant="outline" className={`type-badge-${t.issue_type} text-xs capitalize`}>{t.issue_type}</Badge></td>
                         <td className="py-3 pr-4"><Badge variant="outline" className={`status-badge-${t.status} text-xs capitalize`}>{formatStatus(t.status)}</Badge></td>
                         <td className="py-3 pr-4"><Badge variant="outline" className={`priority-badge-${t.priority} text-xs`}>{t.priority}</Badge></td>
                         <td className="py-3 pr-4 text-muted-foreground text-xs">{getAssignedName(t.assigned_to)}</td>
