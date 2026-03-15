@@ -16,6 +16,7 @@ interface TicketRow {
   id: string; title: string; status: string; priority: string;
   issue_type: string; vendor_id: string; assigned_to: string | null;
   created_at: string; source?: string; short_id?: string;
+  share_contact_with_vendor?: boolean;
 }
 
 const getShortId = (t: TicketRow) => t.short_id || t.id.slice(-6).toUpperCase();
