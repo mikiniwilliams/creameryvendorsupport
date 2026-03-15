@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Ticket, Search, Download, Clock, Flame, Archive } from "lucide-react";
+import { Ticket, Search, Download, Clock, Flame, Archive, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ConfirmDialog from "@/components/ConfirmDialog";
 
@@ -16,6 +16,7 @@ interface TicketRow {
   id: string; title: string; status: string; priority: string;
   issue_type: string; vendor_id: string; assigned_to: string | null;
   created_at: string; source?: string; short_id?: string;
+  share_contact_with_vendor?: boolean;
 }
 
 const getShortId = (t: TicketRow) => t.short_id || t.id.slice(-6).toUpperCase();
@@ -242,7 +243,17 @@ const AdminTickets = () => {
                             <span className="inline-block rounded-full px-2 py-0.5 text-[11px] font-mono text-muted-foreground" style={{ background: "#F1EFE8" }}>#{getShortId(t)}</span>
                           </td>
                           <td className="py-3 pr-4">
-                            <Link to={`/tickets/${t.id}`} className="text-primary hover:underline font-medium">{t.title}</Link>
+                            <Link to={`/tickets/${t.id}`} className="text-primary hover:underline font-medium">
+                              {t.title}
+                            </Link>
+                            {t.share_contact_with_vendor && (
+                              <Tooltip delayDuration={300}>
+                                <TooltipTrigger asChild>
+                                  <Mail className="inline-block h-3 w-3 ml-1.5 text-muted-foreground align-text-bottom" />
+                                </TooltipTrigger>
+                                <TooltipContent>Contact shared with vendor</TooltipContent>
+                              </Tooltip>
+                            )}
                           </td>
                           <td className="py-3 pr-4">
                             {t.source === "public_form" ? (

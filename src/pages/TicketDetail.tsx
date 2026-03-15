@@ -14,7 +14,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Send, UserCheck, History, Pencil, Trash2, Check, X, Lock, Archive, AlertCircle } from "lucide-react";
+import { ArrowLeft, Send, UserCheck, History, Pencil, Trash2, Check, X, Lock, Archive, AlertCircle, Mail, User, Calendar, Info } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import ActivityTimeline from "@/components/ActivityTimeline";
 
 interface Ticket {
@@ -22,6 +23,7 @@ interface Ticket {
   priority: string; issue_type: string; vendor_id: string; created_by: string;
   assigned_to: string | null; created_at: string; updated_at: string;
   customer_name?: string | null; customer_email?: string | null; short_id?: string;
+  share_contact_with_vendor?: boolean;
 }
 
 const getShortId = (t: Ticket) => t.short_id || t.id.slice(-6).toUpperCase();
@@ -124,7 +126,7 @@ const TicketDetail = () => {
     else { setTicket(prev => prev ? { ...prev, vendor_id: newVendorId, assigned_to: null } : prev); toast({ title: "Vendor updated" }); fetchVendorUsers(newVendorId); }
   };
 
-  const updateTicket = async (field: string, value: string | null) => {
+  const updateTicket = async (field: string, value: string | boolean | null) => {
     if (!id) return;
     const { error } = await supabase.from("tickets").update({ [field]: value }).eq("id", id);
     if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -262,6 +264,38 @@ const TicketDetail = () => {
                   <span className="text-xs text-muted-foreground">from <span className="font-medium text-foreground">{ticket.customer_name}</span></span>
                 )}
               </div>
+
+              {/* Customer Information — vendor view */}
+              {role === "vendor" && (
+                <div className="border-t pt-3 space-y-2">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1">
+                    <User className="h-3 w-3" /> Customer Information
+                  </p>
+                  {ticket.customer_name && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <User className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span>{ticket.customer_name}</span>
+                    </div>
+                  )}
+                  {ticket.description && ticket.description.includes("Transaction Date:") && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span>{ticket.description.match(/Transaction Date:\s*(.+)/)?.[1]?.split("\n")[0]}</span>
+                    </div>
+                  )}
+                  {(ticket as any).share_contact_with_vendor && ticket.customer_email ? (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Mail className="h-3.5 w-3.5 text-muted-foreground" />
+                      <a href={`mailto:${ticket.customer_email}`} className="text-primary hover:underline">{ticket.customer_email}</a>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground italic flex items-center gap-1.5">
+                      <Mail className="h-3 w-3" /> Contact email not shared — respond via this ticket thread
+                    </p>
+                  )}
+                </div>
+              )}
+
               {ticket.description && (
                 <div>
                   <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1 flex items-center gap-1">
@@ -394,6 +428,22 @@ const TicketDetail = () => {
                     </SelectContent>
                   </Select>
                 </div>
+                {/* Share contact toggle */}
+                {ticket.customer_email && (
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-muted-foreground flex items-center gap-1"><Mail className="h-3 w-3" /> Share Contact</label>
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        checked={!!(ticket as any).share_contact_with_vendor}
+                        onCheckedChange={(checked) => updateTicket("share_contact_with_vendor", checked as any)}
+                      />
+                      <span className="text-xs text-muted-foreground">Share email with vendor</span>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground flex items-center gap-1 mt-1">
+                      <Info className="h-3 w-3 shrink-0" /> Enable this to allow the vendor to contact the customer directly, e.g. for refunds or replacements.
+                    </p>
+                  </div>
+                )}
               </div>
             )}
 
