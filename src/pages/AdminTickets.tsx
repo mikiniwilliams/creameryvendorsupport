@@ -15,8 +15,10 @@ import ConfirmDialog from "@/components/ConfirmDialog";
 interface TicketRow {
   id: string; title: string; status: string; priority: string;
   issue_type: string; vendor_id: string; assigned_to: string | null;
-  created_at: string; source?: string;
+  created_at: string; source?: string; short_id?: string;
 }
+
+const getShortId = (t: TicketRow) => t.short_id || t.id.slice(-6).toUpperCase();
 interface Vendor { id: string; name: string; }
 interface AdminUser { user_id: string; full_name: string | null; email: string | null; }
 
