@@ -21,8 +21,10 @@ interface Ticket {
   id: string; title: string; description: string | null; status: string;
   priority: string; issue_type: string; vendor_id: string; created_by: string;
   assigned_to: string | null; created_at: string; updated_at: string;
-  customer_name?: string | null; customer_email?: string | null;
+  customer_name?: string | null; customer_email?: string | null; short_id?: string;
 }
+
+const getShortId = (t: Ticket) => t.short_id || t.id.slice(-6).toUpperCase();
 interface Comment { id: string; content: string; user_id: string; created_at: string; }
 interface InternalNote { id: string; content: string; user_id: string; created_at: string; }
 interface ProfileUser { user_id: string; full_name: string | null; email: string | null; }
@@ -295,7 +297,8 @@ const TicketDetail = () => {
                     )}
                   </div>
                 )}
-                <p className="text-sm text-muted-foreground mt-1">Created {new Date(ticket.created_at).toLocaleString()}</p>
+                <p className="text-xs font-mono text-muted-foreground mt-1">Ref #{getShortId(ticket)}</p>
+                <p className="text-sm text-muted-foreground mt-0.5">Created {new Date(ticket.created_at).toLocaleString()}</p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="outline" className={`status-badge-${ticket.status} capitalize`}>{formatStatus(ticket.status)}</Badge>

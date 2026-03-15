@@ -386,6 +386,7 @@ export type Database = {
           is_archived: boolean
           issue_type: string
           priority: string
+          short_id: string | null
           source: string | null
           status: string
           title: string
@@ -405,6 +406,7 @@ export type Database = {
           is_archived?: boolean
           issue_type?: string
           priority?: string
+          short_id?: string | null
           source?: string | null
           status?: string
           title: string
@@ -424,6 +426,7 @@ export type Database = {
           is_archived?: boolean
           issue_type?: string
           priority?: string
+          short_id?: string | null
           source?: string | null
           status?: string
           title?: string

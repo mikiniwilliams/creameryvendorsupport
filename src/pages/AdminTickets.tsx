@@ -15,8 +15,10 @@ import ConfirmDialog from "@/components/ConfirmDialog";
 interface TicketRow {
   id: string; title: string; status: string; priority: string;
   issue_type: string; vendor_id: string; assigned_to: string | null;
-  created_at: string; source?: string;
+  created_at: string; source?: string; short_id?: string;
 }
+
+const getShortId = (t: TicketRow) => t.short_id || t.id.slice(-6).toUpperCase();
 interface Vendor { id: string; name: string; }
 interface AdminUser { user_id: string; full_name: string | null; email: string | null; }
 
@@ -90,7 +92,10 @@ const AdminTickets = () => {
     if (filterPriority !== "all" && t.priority !== filterPriority) return false;
     if (filterVendor !== "all" && t.vendor_id !== filterVendor) return false;
     if (filterType !== "all" && t.issue_type !== filterType) return false;
-    if (search && !t.title.toLowerCase().includes(search.toLowerCase())) return false;
+    if (search) {
+      const q = search.toLowerCase().replace(/^#/, "");
+      if (!t.title.toLowerCase().includes(q) && !getShortId(t).toLowerCase().includes(q)) return false;
+    }
     return true;
   });
 
@@ -215,6 +220,7 @@ const AdminTickets = () => {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b text-left">
+                      <th className="pb-3 font-medium text-muted-foreground w-[90px]">Ref #</th>
                       <th className="pb-3 font-medium text-muted-foreground">Title</th>
                       <th className="pb-3 font-medium text-muted-foreground">Source</th>
                       <th className="pb-3 font-medium text-muted-foreground">Vendor</th>
@@ -232,6 +238,9 @@ const AdminTickets = () => {
                       const assignedName = getAssignedName(t.assigned_to);
                       return (
                         <tr key={t.id} className={`border-b last:border-0 hover:bg-muted/50 ${priorityLeftClass(t.priority, t.status)} ${archivingId === t.id ? "animate-fade-out" : ""}`}>
+                          <td className="py-3 pr-4">
+                            <span className="inline-block rounded-full px-2 py-0.5 text-[11px] font-mono text-muted-foreground" style={{ background: "#F1EFE8" }}>#{getShortId(t)}</span>
+                          </td>
                           <td className="py-3 pr-4">
                             <Link to={`/tickets/${t.id}`} className="text-primary hover:underline font-medium">{t.title}</Link>
                           </td>

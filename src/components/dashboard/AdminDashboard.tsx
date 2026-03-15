@@ -168,7 +168,10 @@ const AdminDashboard = () => {
                 <Link key={t.id} to={`/tickets/${t.id}`} className={`flex items-center justify-between rounded-lg border border-[#e8e3d8] p-3 hover:bg-muted/50 transition-colors ${priorityLeftClass(t.priority, t.status)}`}>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium truncate">{t.title}</p>
-                    <p className="text-xs text-muted-foreground">{t.issue_type || "general"} · {new Date(t.created_at).toLocaleDateString()}</p>
+                    <p className="text-xs text-muted-foreground">
+                      <span className="font-mono" style={{ color: "#9CA3AF" }}>#{(t.short_id || t.id.slice(-6)).toUpperCase()}</span>
+                      {" · "}{t.issue_type || "general"} · {new Date(t.created_at).toLocaleDateString()}
+                    </p>
                   </div>
                   <div className="flex items-center gap-2 ml-4">
                     <TicketAgeIndicator age={getTicketAge(t.created_at, t.status)} />
