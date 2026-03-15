@@ -233,6 +233,20 @@ const SubmitRequest = () => {
               />
             </div>
 
+            {/* Honeypot field - hidden from real users, bots will fill it */}
+            <div className="absolute opacity-0 top-0 left-0 h-0 w-0 -z-10 overflow-hidden" aria-hidden="true" tabIndex={-1}>
+              <label htmlFor="website_url">Website</label>
+              <input
+                type="text"
+                id="website_url"
+                name="website_url"
+                value={honeypot}
+                onChange={e => setHoneypot(e.target.value)}
+                autoComplete="off"
+                tabIndex={-1}
+              />
+            </div>
+
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Submitting…" : "Submit Support Request"}
             </Button>
