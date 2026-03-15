@@ -239,6 +239,9 @@ const AdminTickets = () => {
                       return (
                         <tr key={t.id} className={`border-b last:border-0 hover:bg-muted/50 ${priorityLeftClass(t.priority, t.status)} ${archivingId === t.id ? "animate-fade-out" : ""}`}>
                           <td className="py-3 pr-4">
+                            <span className="inline-block rounded-full px-2 py-0.5 text-[11px] font-mono text-muted-foreground" style={{ background: "#F1EFE8" }}>#{getShortId(t)}</span>
+                          </td>
+                          <td className="py-3 pr-4">
                             <Link to={`/tickets/${t.id}`} className="text-primary hover:underline font-medium">{t.title}</Link>
                           </td>
                           <td className="py-3 pr-4">

@@ -283,6 +283,7 @@ const VendorDashboard = ({ onClosePreview }: VendorDashboardProps = {}) => {
                 <Separator />
                 <div className="p-4 space-y-4">
                   <h4 className="font-medium text-sm leading-tight">{previewTicket.title}</h4>
+                  <p className="text-[10px] font-mono text-muted-foreground">#{previewTicket.short_id || previewTicket.id.slice(-6).toUpperCase()}</p>
                   <div className="flex gap-2">
                     <Badge variant="outline" className={`${statusConfig[previewTicket.status]?.class || ""} text-[10px] capitalize`}>{statusConfig[previewTicket.status]?.label || previewTicket.status}</Badge>
                     <Badge variant="outline" className={`${priorityConfig[previewTicket.priority] || ""} text-[10px] capitalize`}>{previewTicket.priority}</Badge>

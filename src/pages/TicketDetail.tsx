@@ -297,7 +297,8 @@ const TicketDetail = () => {
                     )}
                   </div>
                 )}
-                <p className="text-sm text-muted-foreground mt-1">Created {new Date(ticket.created_at).toLocaleString()}</p>
+                <p className="text-xs font-mono text-muted-foreground mt-1">Ref #{getShortId(ticket)}</p>
+                <p className="text-sm text-muted-foreground mt-0.5">Created {new Date(ticket.created_at).toLocaleString()}</p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="outline" className={`status-badge-${ticket.status} capitalize`}>{formatStatus(ticket.status)}</Badge>
