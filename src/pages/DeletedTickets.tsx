@@ -27,11 +27,12 @@ const DeletedTickets = () => {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const fetchData = async () => {
+    const ticketsQuery = supabase.from("tickets").select("*") as any;
     const [ticketsRes, vendorsRes] = await Promise.all([
-      supabase.from("tickets").select("*").eq("is_deleted" as any, true).order("deleted_at" as any, { ascending: false }) as any,
+      ticketsQuery.eq("is_deleted", true).order("deleted_at", { ascending: false }),
       supabase.from("vendors").select("id, name"),
     ]);
-    if (ticketsRes.data) setTickets(ticketsRes.data as any[]);
+    if (ticketsRes.data) setTickets(ticketsRes.data as DeletedTicket[]);
     if (vendorsRes.data) setVendors(vendorsRes.data as Vendor[]);
     setLoading(false);
   };

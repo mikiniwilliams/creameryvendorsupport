@@ -67,8 +67,9 @@ const AdminTickets = () => {
   const [bulkDeleting, setBulkDeleting] = useState(false);
 
   const fetchData = async () => {
+    const ticketsQuery = supabase.from("tickets").select("*").eq("is_archived", false) as any;
     const [ticketsRes, vendorsRes, adminRolesRes] = await Promise.all([
-      supabase.from("tickets").select("*").eq("is_archived", false).eq("is_deleted" as any, false).order("created_at", { ascending: false }) as any,
+      ticketsQuery.eq("is_deleted", false).order("created_at", { ascending: false }),
       supabase.from("vendors").select("id, name").order("name"),
       supabase.from("user_roles").select("user_id").eq("role", "admin"),
     ]);
