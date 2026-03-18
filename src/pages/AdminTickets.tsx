@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Ticket, Search, Download, Clock, Flame, Archive, Mail } from "lucide-react";
+import { Ticket, Search, Download, Clock, Flame, Archive, Mail, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ConfirmDialog from "@/components/ConfirmDialog";
 
@@ -62,6 +62,7 @@ const AdminTickets = () => {
   const [filterType, setFilterType] = useState("all");
   const [search, setSearch] = useState("");
   const [archivingId, setArchivingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const fetchData = async () => {
     const [ticketsRes, vendorsRes, adminRolesRes] = await Promise.all([
@@ -130,6 +131,26 @@ const AdminTickets = () => {
         ),
       });
     }, 300);
+  };
+
+  const handleDelete = async (ticketId: string) => {
+    setDeletingId(ticketId);
+    // Delete related rows first, then the ticket
+    await Promise.all([
+      supabase.from("comments").delete().eq("ticket_id", ticketId),
+      supabase.from("internal_notes").delete().eq("ticket_id", ticketId),
+      supabase.from("ticket_activity").delete().eq("ticket_id", ticketId),
+      supabase.from("notifications").delete().eq("ticket_id", ticketId),
+    ]);
+    const { error } = await supabase.from("tickets").delete().eq("id", ticketId);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      setDeletingId(null);
+      return;
+    }
+    setTickets(prev => prev.filter(t => t.id !== ticketId));
+    setDeletingId(null);
+    toast({ title: "Ticket permanently deleted" });
   };
 
   const exportCsv = () => {
@@ -276,23 +297,42 @@ const AdminTickets = () => {
                           <td className="py-3 pr-4"><TicketAgeIndicator age={getTicketAge(t.created_at, t.status)} /></td>
                           <td className="py-3 pr-2 text-muted-foreground text-xs">{new Date(t.created_at).toLocaleDateString()}</td>
                           <td className="py-3">
-                            <ConfirmDialog
-                              trigger={
-                                <Tooltip delayDuration={500}>
-                                  <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground">
-                                      <Archive className="h-3.5 w-3.5" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>Archive ticket</TooltipContent>
-                                </Tooltip>
-                              }
-                              title="Archive this ticket?"
-                              description="This ticket will be hidden from all views but preserved in your records. You can restore it anytime from the Archived Tickets section. No data will be deleted."
-                              confirmLabel="Archive Ticket"
-                              variant="default"
-                              onConfirm={() => handleArchive(t.id)}
-                            />
+                            <div className="flex items-center gap-0.5">
+                              <ConfirmDialog
+                                trigger={
+                                  <Tooltip delayDuration={500}>
+                                    <TooltipTrigger asChild>
+                                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground">
+                                        <Archive className="h-3.5 w-3.5" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Archive ticket</TooltipContent>
+                                  </Tooltip>
+                                }
+                                title="Archive this ticket?"
+                                description="This ticket will be hidden from all views but preserved in your records. You can restore it anytime from the Archived Tickets section. No data will be deleted."
+                                confirmLabel="Archive Ticket"
+                                variant="default"
+                                onConfirm={() => handleArchive(t.id)}
+                              />
+                              <ConfirmDialog
+                                trigger={
+                                  <Tooltip delayDuration={500}>
+                                    <TooltipTrigger asChild>
+                                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive">
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Delete ticket permanently</TooltipContent>
+                                  </Tooltip>
+                                }
+                                title="Permanently delete this ticket?"
+                                description="This will permanently delete the ticket and all associated comments, notes, and activity logs. This action cannot be undone."
+                                confirmLabel="Delete Forever"
+                                variant="destructive"
+                                onConfirm={() => handleDelete(t.id)}
+                              />
+                            </div>
                           </td>
                         </tr>
                       );
