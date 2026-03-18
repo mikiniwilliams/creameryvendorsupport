@@ -42,8 +42,9 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      const ticketsQuery = supabase.from("tickets").select("*").eq("is_archived", false) as any;
       const [ticketsRes, archivedRes, vendorsRes, profilesRes] = await Promise.all([
-        supabase.from("tickets").select("*").eq("is_archived", false).order("created_at", { ascending: false }),
+        ticketsQuery.eq("is_deleted", false).order("created_at", { ascending: false }),
         supabase.from("tickets").select("id", { count: "exact", head: true }).eq("is_archived", true),
         supabase.from("vendors").select("id, status"),
         supabase.from("profiles").select("status"),

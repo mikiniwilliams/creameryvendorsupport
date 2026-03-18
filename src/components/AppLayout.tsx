@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import NotificationBell from "@/components/NotificationBell";
 import {
   LayoutDashboard, Building2, Users, Bell, LogOut,
-  CheckCircle, Ticket, BookOpen, FileText, Plus, LinkIcon, Copy, Check, Archive, User
+  CheckCircle, Ticket, BookOpen, FileText, Plus, LinkIcon, Copy, Check, Archive, User, Trash2
 } from "lucide-react";
 
 const ADMIN_PAGE_TITLES: Record<string, string> = {
@@ -18,6 +18,7 @@ const ADMIN_PAGE_TITLES: Record<string, string> = {
   "/admin/approvals": "Approvals",
   "/admin/tickets": "Ticket Command Center",
   "/admin/tickets/archived": "Archived Tickets",
+  "/admin/tickets/deleted": "Deleted Tickets",
   "/admin/templates": "Ticket Templates",
   "/vendors": "Vendors",
   "/users": "User Management",
@@ -135,6 +136,9 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
             </Link>
             <Link to="/admin/tickets/archived" className={navClass("/admin/tickets/archived")}>
               <Archive className="h-4 w-4 text-[#6b6156]" /> Archived
+            </Link>
+            <Link to="/admin/tickets/deleted" className={navClass("/admin/tickets/deleted")}>
+              <Trash2 className="h-4 w-4 text-[#6b6156]" /> Deleted
             </Link>
             <Link to="/admin/templates" className={navClass("/admin/templates")}>
               <FileText className="h-4 w-4" /> Templates

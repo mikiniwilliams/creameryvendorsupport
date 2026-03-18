@@ -381,9 +381,11 @@ export type Database = {
           created_by: string
           customer_email: string | null
           customer_name: string | null
+          deleted_at: string | null
           description: string | null
           id: string
           is_archived: boolean
+          is_deleted: boolean
           issue_type: string
           priority: string
           share_contact_with_vendor: boolean
@@ -402,9 +404,11 @@ export type Database = {
           created_by: string
           customer_email?: string | null
           customer_name?: string | null
+          deleted_at?: string | null
           description?: string | null
           id?: string
           is_archived?: boolean
+          is_deleted?: boolean
           issue_type?: string
           priority?: string
           share_contact_with_vendor?: boolean
@@ -423,9 +427,11 @@ export type Database = {
           created_by?: string
           customer_email?: string | null
           customer_name?: string | null
+          deleted_at?: string | null
           description?: string | null
           id?: string
           is_archived?: boolean
+          is_deleted?: boolean
           issue_type?: string
           priority?: string
           share_contact_with_vendor?: boolean

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/integrations/supabase/client";
 import AppLayout from "@/components/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Ticket, Search, Download, Clock, Flame, Archive, Mail, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ConfirmDialog from "@/components/ConfirmDialog";
@@ -62,11 +63,13 @@ const AdminTickets = () => {
   const [filterType, setFilterType] = useState("all");
   const [search, setSearch] = useState("");
   const [archivingId, setArchivingId] = useState<string | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   const fetchData = async () => {
+    const ticketsQuery = supabase.from("tickets").select("*").eq("is_archived", false) as any;
     const [ticketsRes, vendorsRes, adminRolesRes] = await Promise.all([
-      supabase.from("tickets").select("*").eq("is_archived", false).order("created_at", { ascending: false }),
+      ticketsQuery.eq("is_deleted", false).order("created_at", { ascending: false }),
       supabase.from("vendors").select("id, name").order("name"),
       supabase.from("user_roles").select("user_id").eq("role", "admin"),
     ]);
@@ -118,6 +121,7 @@ const AdminTickets = () => {
 
     setTimeout(() => {
       setTickets(prev => prev.filter(t => t.id !== ticketId));
+      setSelectedIds(prev => { const n = new Set(prev); n.delete(ticketId); return n; });
       setArchivingId(null);
       toast({
         title: "Ticket archived",
@@ -133,25 +137,52 @@ const AdminTickets = () => {
     }, 300);
   };
 
-  const handleDelete = async (ticketId: string) => {
-    setDeletingId(ticketId);
-    // Delete related rows first, then the ticket
-    await Promise.all([
-      supabase.from("comments").delete().eq("ticket_id", ticketId),
-      supabase.from("internal_notes").delete().eq("ticket_id", ticketId),
-      supabase.from("ticket_activity").delete().eq("ticket_id", ticketId),
-      supabase.from("notifications").delete().eq("ticket_id", ticketId),
-    ]);
-    const { error } = await supabase.from("tickets").delete().eq("id", ticketId);
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-      setDeletingId(null);
+  const handleSoftDelete = async (ticketIds: string[]) => {
+    const now = new Date().toISOString();
+    const promises = ticketIds.map(id =>
+      supabase.from("tickets").update({
+        is_deleted: true as any,
+        deleted_at: now as any,
+      }).eq("id", id)
+    );
+    const results = await Promise.all(promises);
+    const errors = results.filter(r => r.error);
+    if (errors.length > 0) {
+      toast({ title: "Error", description: `Failed to delete ${errors.length} ticket(s)`, variant: "destructive" });
       return;
     }
-    setTickets(prev => prev.filter(t => t.id !== ticketId));
-    setDeletingId(null);
-    toast({ title: "Ticket permanently deleted" });
+    setTickets(prev => prev.filter(t => !ticketIds.includes(t.id)));
+    setSelectedIds(new Set());
+    toast({
+      title: `${ticketIds.length} ticket(s) moved to trash`,
+      description: "You can recover them from Deleted Tickets.",
+    });
   };
+
+  const handleBulkDelete = async () => {
+    setBulkDeleting(true);
+    await handleSoftDelete(Array.from(selectedIds));
+    setBulkDeleting(false);
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const n = new Set(prev);
+      if (n.has(id)) n.delete(id); else n.add(id);
+      return n;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filtered.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filtered.map(t => t.id)));
+    }
+  };
+
+  const allSelected = filtered.length > 0 && selectedIds.size === filtered.length;
+  const someSelected = selectedIds.size > 0 && selectedIds.size < filtered.length;
 
   const exportCsv = () => {
     const headers = ["Title", "Vendor", "Type", "Status", "Priority", "Assigned To", "Created"];
@@ -174,9 +205,25 @@ const AdminTickets = () => {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-medium flex items-center gap-2"><Ticket className="h-6 w-6" /> Ticket Command Center</h1>
-          <Button variant="outline" size="sm" onClick={exportCsv} disabled={filtered.length === 0} className="gap-2">
-            <Download className="h-4 w-4" /> Export CSV
-          </Button>
+          <div className="flex items-center gap-2">
+            {selectedIds.size > 0 && (
+              <ConfirmDialog
+                trigger={
+                  <Button variant="destructive" size="sm" className="gap-2" disabled={bulkDeleting}>
+                    <Trash2 className="h-4 w-4" /> Delete {selectedIds.size} Selected
+                  </Button>
+                }
+                title={`Delete ${selectedIds.size} ticket(s)?`}
+                description="Selected tickets will be moved to trash. You can recover them from the Deleted Tickets section."
+                confirmLabel="Delete Selected"
+                variant="destructive"
+                onConfirm={handleBulkDelete}
+              />
+            )}
+            <Button variant="outline" size="sm" onClick={exportCsv} disabled={filtered.length === 0} className="gap-2">
+              <Download className="h-4 w-4" /> Export CSV
+            </Button>
+          </div>
         </div>
 
         <Card>
@@ -230,7 +277,14 @@ const AdminTickets = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-base font-medium">Tickets ({filtered.length})</CardTitle>
+            <CardTitle className="text-base font-medium">
+              Tickets ({filtered.length})
+              {selectedIds.size > 0 && (
+                <span className="ml-2 text-sm font-normal text-muted-foreground">
+                  · {selectedIds.size} selected
+                </span>
+              )}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {loading ? (
@@ -242,6 +296,13 @@ const AdminTickets = () => {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b text-left">
+                      <th className="pb-3 pr-2 w-8">
+                        <Checkbox
+                          checked={allSelected ? true : someSelected ? "indeterminate" : false}
+                          onCheckedChange={toggleSelectAll}
+                          aria-label="Select all tickets"
+                        />
+                      </th>
                       <th className="pb-3 font-medium text-muted-foreground w-[90px]">Ref #</th>
                       <th className="pb-3 font-medium text-muted-foreground">Title</th>
                       <th className="pb-3 font-medium text-muted-foreground">Source</th>
@@ -259,7 +320,14 @@ const AdminTickets = () => {
                     {filtered.map(t => {
                       const assignedName = getAssignedName(t.assigned_to);
                       return (
-                        <tr key={t.id} className={`border-b last:border-0 hover:bg-muted/50 ${priorityLeftClass(t.priority, t.status)} ${archivingId === t.id ? "animate-fade-out" : ""}`}>
+                        <tr key={t.id} className={`border-b last:border-0 hover:bg-muted/50 ${priorityLeftClass(t.priority, t.status)} ${archivingId === t.id ? "animate-fade-out" : ""} ${selectedIds.has(t.id) ? "bg-muted/30" : ""}`}>
+                          <td className="py-3 pr-2">
+                            <Checkbox
+                              checked={selectedIds.has(t.id)}
+                              onCheckedChange={() => toggleSelect(t.id)}
+                              aria-label={`Select ticket ${getShortId(t)}`}
+                            />
+                          </td>
                           <td className="py-3 pr-4">
                             <span className="inline-block rounded-full px-2 py-0.5 text-[11px] font-mono text-muted-foreground" style={{ background: "#F1EFE8" }}>#{getShortId(t)}</span>
                           </td>
@@ -312,15 +380,15 @@ const AdminTickets = () => {
                               />
                               <ConfirmDialog
                                 trigger={
-                                  <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" title="Delete ticket permanently">
+                                  <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" title="Move to trash">
                                     <Trash2 className="h-3.5 w-3.5" />
                                   </Button>
                                 }
-                                title="Permanently delete this ticket?"
-                                description="This will permanently delete the ticket and all associated comments, notes, and activity logs. This action cannot be undone."
-                                confirmLabel="Delete Forever"
+                                title="Delete this ticket?"
+                                description="This ticket will be moved to trash. You can recover it from the Deleted Tickets section."
+                                confirmLabel="Delete"
                                 variant="destructive"
-                                onConfirm={() => handleDelete(t.id)}
+                                onConfirm={() => handleSoftDelete([t.id])}
                               />
                             </div>
                           </td>
