@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import NotificationBell from "@/components/NotificationBell";
 import {
   LayoutDashboard, Building2, Users, Bell, LogOut,
-  CheckCircle, Ticket, BookOpen, FileText, Plus, LinkIcon, Copy, Check, Archive, User
+  CheckCircle, Ticket, BookOpen, FileText, Plus, LinkIcon, Copy, Check, Archive, User, Trash2
 } from "lucide-react";
 
 const ADMIN_PAGE_TITLES: Record<string, string> = {
