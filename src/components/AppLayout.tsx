@@ -18,6 +18,7 @@ const ADMIN_PAGE_TITLES: Record<string, string> = {
   "/admin/approvals": "Approvals",
   "/admin/tickets": "Ticket Command Center",
   "/admin/tickets/archived": "Archived Tickets",
+  "/admin/tickets/deleted": "Deleted Tickets",
   "/admin/templates": "Ticket Templates",
   "/vendors": "Vendors",
   "/users": "User Management",
