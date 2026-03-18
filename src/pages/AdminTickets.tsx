@@ -61,7 +61,7 @@ const AdminTickets = () => {
   const [filterVendor, setFilterVendor] = useState("all");
   const [filterType, setFilterType] = useState("all");
   const [search, setSearch] = useState("");
-  const [archivingId, setArchivingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const fetchData = async () => {
     const [ticketsRes, vendorsRes, adminRolesRes] = await Promise.all([
