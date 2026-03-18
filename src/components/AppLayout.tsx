@@ -137,6 +137,9 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
             <Link to="/admin/tickets/archived" className={navClass("/admin/tickets/archived")}>
               <Archive className="h-4 w-4 text-[#6b6156]" /> Archived
             </Link>
+            <Link to="/admin/tickets/deleted" className={navClass("/admin/tickets/deleted")}>
+              <Trash2 className="h-4 w-4 text-[#6b6156]" /> Deleted
+            </Link>
             <Link to="/admin/templates" className={navClass("/admin/templates")}>
               <FileText className="h-4 w-4" /> Templates
             </Link>
