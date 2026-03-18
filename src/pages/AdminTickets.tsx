@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Ticket, Search, Download, Clock, Flame, Archive, Mail } from "lucide-react";
+import { Ticket, Search, Download, Clock, Flame, Archive, Mail, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ConfirmDialog from "@/components/ConfirmDialog";
 
