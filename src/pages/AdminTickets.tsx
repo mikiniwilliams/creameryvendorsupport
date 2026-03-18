@@ -297,23 +297,42 @@ const AdminTickets = () => {
                           <td className="py-3 pr-4"><TicketAgeIndicator age={getTicketAge(t.created_at, t.status)} /></td>
                           <td className="py-3 pr-2 text-muted-foreground text-xs">{new Date(t.created_at).toLocaleDateString()}</td>
                           <td className="py-3">
-                            <ConfirmDialog
-                              trigger={
-                                <Tooltip delayDuration={500}>
-                                  <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground">
-                                      <Archive className="h-3.5 w-3.5" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>Archive ticket</TooltipContent>
-                                </Tooltip>
-                              }
-                              title="Archive this ticket?"
-                              description="This ticket will be hidden from all views but preserved in your records. You can restore it anytime from the Archived Tickets section. No data will be deleted."
-                              confirmLabel="Archive Ticket"
-                              variant="default"
-                              onConfirm={() => handleArchive(t.id)}
-                            />
+                            <div className="flex items-center gap-0.5">
+                              <ConfirmDialog
+                                trigger={
+                                  <Tooltip delayDuration={500}>
+                                    <TooltipTrigger asChild>
+                                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground">
+                                        <Archive className="h-3.5 w-3.5" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Archive ticket</TooltipContent>
+                                  </Tooltip>
+                                }
+                                title="Archive this ticket?"
+                                description="This ticket will be hidden from all views but preserved in your records. You can restore it anytime from the Archived Tickets section. No data will be deleted."
+                                confirmLabel="Archive Ticket"
+                                variant="default"
+                                onConfirm={() => handleArchive(t.id)}
+                              />
+                              <ConfirmDialog
+                                trigger={
+                                  <Tooltip delayDuration={500}>
+                                    <TooltipTrigger asChild>
+                                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive">
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Delete ticket permanently</TooltipContent>
+                                  </Tooltip>
+                                }
+                                title="Permanently delete this ticket?"
+                                description="This will permanently delete the ticket and all associated comments, notes, and activity logs. This action cannot be undone."
+                                confirmLabel="Delete Forever"
+                                variant="destructive"
+                                onConfirm={() => handleDelete(t.id)}
+                              />
+                            </div>
                           </td>
                         </tr>
                       );
