@@ -28,7 +28,7 @@ const DeletedTickets = () => {
 
   const fetchData = async () => {
     const [ticketsRes, vendorsRes] = await Promise.all([
-      supabase.from("tickets").select("*").eq("is_deleted" as any, true).order("deleted_at" as any, { ascending: false }),
+      supabase.from("tickets").select("*").eq("is_deleted" as any, true).order("deleted_at" as any, { ascending: false }) as any,
       supabase.from("vendors").select("id, name"),
     ]);
     if (ticketsRes.data) setTickets(ticketsRes.data as any[]);
