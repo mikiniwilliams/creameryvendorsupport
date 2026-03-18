@@ -132,6 +132,26 @@ const AdminTickets = () => {
     }, 300);
   };
 
+  const handleDelete = async (ticketId: string) => {
+    setDeletingId(ticketId);
+    // Delete related rows first, then the ticket
+    await Promise.all([
+      supabase.from("comments").delete().eq("ticket_id", ticketId),
+      supabase.from("internal_notes").delete().eq("ticket_id", ticketId),
+      supabase.from("ticket_activity").delete().eq("ticket_id", ticketId),
+      supabase.from("notifications").delete().eq("ticket_id", ticketId),
+    ]);
+    const { error } = await supabase.from("tickets").delete().eq("id", ticketId);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      setDeletingId(null);
+      return;
+    }
+    setTickets(prev => prev.filter(t => t.id !== ticketId));
+    setDeletingId(null);
+    toast({ title: "Ticket permanently deleted" });
+  };
+
   const exportCsv = () => {
     const headers = ["Title", "Vendor", "Type", "Status", "Priority", "Assigned To", "Created"];
     const escape = (v: string) => `"${v.replace(/"/g, '""')}"`;
