@@ -19,6 +19,7 @@ import Notifications from "./pages/Notifications";
 import AdminApprovals from "./pages/AdminApprovals";
 import AdminTickets from "./pages/AdminTickets";
 import ArchivedTickets from "./pages/ArchivedTickets";
+import DeletedTickets from "./pages/DeletedTickets";
 import TicketTemplates from "./pages/TicketTemplates";
 import SubmitRequest from "./pages/SubmitRequest";
 import VendorProfilePage from "./pages/VendorProfilePage";
