@@ -121,6 +121,20 @@ const DeletedTickets = () => {
                 />
               </>
             )}
+            {tickets.length > 0 && (
+              <ConfirmDialog
+                trigger={
+                  <Button variant="destructive" size="sm" className="gap-2">
+                    <Trash2 className="h-4 w-4" /> Delete All ({tickets.length})
+                  </Button>
+                }
+                title={`Permanently delete all ${tickets.length} ticket(s)?`}
+                description="This will permanently delete ALL trashed tickets and their associated data. This action cannot be undone."
+                confirmLabel="Delete All Forever"
+                variant="destructive"
+                onConfirm={() => handlePermanentDelete(tickets.map(t => t.id))}
+              />
+            )}
           </div>
         </div>
 
